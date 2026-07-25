@@ -162,6 +162,19 @@ func TestLocationList_Default(t *testing.T) {
 			want:  mustLoadLocation(t, "Asia/Tokyo"),
 		},
 		{
+			// UTC зарегистрирован до обхода списка, но первым годным именем
+			// остаётся именно он, поэтому он же становится поясом по умолчанию
+			name:  "explicit utc is the first usable name",
+			names: []string{"UTC", "Europe/Moscow"},
+			want:  time.UTC,
+		},
+		{
+			// повтор пропускается, но пояс по умолчанию задаётся первым вхождением
+			name:  "duplicate does not shift the default",
+			names: []string{"Asia/Tokyo", "Asia/Tokyo", "Europe/Moscow"},
+			want:  mustLoadLocation(t, "Asia/Tokyo"),
+		},
+		{
 			name:  "entirely unusable list falls back to utc",
 			names: []string{"", "Nowhere/Bad"},
 			want:  time.UTC,
@@ -175,6 +188,91 @@ func TestLocationList_Default(t *testing.T) {
 			assert.Equal(t, tc.want, timezone.NewLocationList(tc.names).Default())
 		})
 	}
+}
+
+// TestLocationList_TimeZones - проверяет, что список имён отличается от переданного:
+// UTC присутствует всегда, а пустые имена, "Local", не найденные в базе часовых поясов
+// и повторы отброшены.
+func TestLocationList_TimeZones(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		names []string
+		want  []string
+	}{
+		{
+			name:  "utc is added to the list",
+			names: []string{"Europe/Moscow", "Asia/Tokyo"},
+			want:  []string{"UTC", "Europe/Moscow", "Asia/Tokyo"},
+		},
+		{
+			// UTC регистрируется всегда, поэтому в именах не удваивается
+			name:  "explicit utc is not duplicated",
+			names: []string{"UTC", "Europe/Moscow"},
+			want:  []string{"UTC", "Europe/Moscow"},
+		},
+		{
+			// UTC регистрируется до обхода списка, поэтому своей позиции в нём не занимает
+			name:  "explicit utc is hoisted to the front",
+			names: []string{"Europe/Moscow", "UTC", "Asia/Tokyo"},
+			want:  []string{"UTC", "Europe/Moscow", "Asia/Tokyo"},
+		},
+		{
+			name:  "duplicates are collapsed",
+			names: []string{"Europe/Moscow", "Europe/Moscow"},
+			want:  []string{"UTC", "Europe/Moscow"},
+		},
+		{
+			// пояс процесса наружу не отдаётся, пустое имя и неизвестный пояс негодны
+			name:  "empty, local and unknown names are dropped",
+			names: []string{"", "Local", "Mars/Olympus", "Europe/Moscow"},
+			want:  []string{"UTC", "Europe/Moscow"},
+		},
+		{
+			name:  "empty list still provides utc",
+			names: nil,
+			want:  []string{"UTC"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.want, timezone.NewLocationList(tc.names).TimeZones())
+		})
+	}
+}
+
+// TestLocationList_TimeZones_MatchLocationByName - проверяет, что список и строгий подбор
+// опираются на одни и те же имена: каждое имя списка принимается LocationByName.
+// Негодные имена в исходном списке заданы затем, чтобы отсев не разошёлся между ними.
+func TestLocationList_TimeZones_MatchLocationByName(t *testing.T) {
+	t.Parallel()
+
+	list := timezone.NewLocationList([]string{"", "Local", "Mars/Olympus", "Europe/Moscow", "Asia/Tokyo"})
+
+	names := list.TimeZones()
+	require.NotEmpty(t, names) // иначе проверка выродилась бы в пустой цикл
+
+	for _, name := range names {
+		_, err := list.LocationByName(name)
+		assert.NoError(t, err, name)
+	}
+}
+
+// TestLocationList_TimeZones_ReturnsCopy - проверяет, что выданный срез принадлежит
+// вызывающему: его изменение на состав поясов списка не влияет.
+func TestLocationList_TimeZones_ReturnsCopy(t *testing.T) {
+	t.Parallel()
+
+	list := timezone.NewLocationList([]string{"Europe/Moscow"})
+
+	got := list.TimeZones()
+	got[0] = "Mars/Olympus"
+
+	assert.Equal(t, []string{"UTC", "Europe/Moscow"}, list.TimeZones())
 }
 
 // mustLoadLocation - загружает часовой пояс или прерывает тест.

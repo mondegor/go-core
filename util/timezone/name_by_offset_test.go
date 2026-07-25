@@ -207,7 +207,8 @@ func TestLocationList_NameByOffset_ZonesWithoutDST(t *testing.T) {
 }
 
 // TestLocationList_NameByOffset_Collision - фиксирует выбранное поведение при
-// совпадении пары у нескольких поясов: выигрывает последний в списке.
+// совпадении пары у нескольких поясов: выигрывает пояс, указанный в списке позднее
+// (о списке с повторами см. TestLocationList_NameByOffset_DuplicateIgnored).
 // Это документирование правила, а не проверка «правильного» ответа —
 // Europe/Berlin и Europe/Paris по паре неразличимы.
 func TestLocationList_NameByOffset_Collision(t *testing.T) {
@@ -227,6 +228,46 @@ func TestLocationList_NameByOffset_Collision(t *testing.T) {
 			name:  "paris is registered last",
 			names: []string{"Europe/Berlin", "Europe/Paris"},
 			want:  "Europe/Paris",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			list := timezone.NewLocationList(tc.names)
+
+			assertZone(t, list, 1*time.Hour, false, tc.want)
+			assertZone(t, list, 2*time.Hour, true, tc.want)
+		})
+	}
+}
+
+// TestLocationList_NameByOffset_DuplicateIgnored - проверяет, что повтор имени в списке
+// на подбор не влияет: пояс регистрируется по первому вхождению, поэтому повтор
+// не отбирает пару ни у пояса, указанного после него, ни у самого себя, то есть
+// сравниваются первые вхождения, а не позиции в списке
+// (ср. TestLocationList_NameByOffset_Collision).
+func TestLocationList_NameByOffset_DuplicateIgnored(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		names []string
+		want  string
+	}{
+		{
+			// повтор Europe/Berlin пару себе не возвращает, хотя указан последним
+			name:  "duplicate does not take the pair back",
+			names: []string{"Europe/Berlin", "Europe/Paris", "Europe/Berlin"},
+			want:  "Europe/Paris",
+		},
+		{
+			// зеркальный список: последним указан Europe/Paris, но его первое
+			// вхождение раньше, поэтому пара остаётся у Europe/Berlin
+			name:  "the last name in the list does not win",
+			names: []string{"Europe/Paris", "Europe/Berlin", "Europe/Paris"},
+			want:  "Europe/Berlin",
 		},
 	}
 

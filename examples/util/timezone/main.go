@@ -27,6 +27,11 @@ func main() {
 	// все пояса загружаются один раз при старте приложения
 	list := timezone.NewLocationList(names)
 
+	// список поясов приложения берётся у самого списка, а не у конфигурации:
+	// UTC в нём есть всегда, даже если его не указывали, а негодные имена и повторы
+	// отброшены, поэтому только эти имена принимает LocationByName
+	mrlog.Info(logger, "registered timezones", "zones", list.TimeZones(), "default", list.Default().String())
+
 	tm := time.Date(2026, time.July, 18, 12, 0, 0, 0, time.UTC)
 
 	resultWrapper := func(loc *time.Location, err error) string {

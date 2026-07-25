@@ -1,6 +1,8 @@
 package mrlocale
 
 import (
+	"slices"
+
 	"golang.org/x/text/language"
 )
 
@@ -12,6 +14,7 @@ type (
 		bundle           *Bundle
 		localizers       []*Localizer
 		localizerByCode  map[string]*Localizer
+		languages        []string
 		defaultLocalizer *Localizer
 	}
 )
@@ -25,10 +28,11 @@ type (
 // заведомо совпадают, и промежуточный поиск по тегу не нужен.
 //
 // Параллельно срезу собирается индекс локализаторов по коду: он обслуживает точный
-// подбор (LocalizerByCode), которому матчер не нужен.
+// подбор (LocalizerByCode), которому матчер не нужен, и список кодов (см. Languages).
 func NewPool(bundle *Bundle) *Pool {
 	localizers := make([]*Localizer, len(bundle.languages))
 	localizerByCode := make(map[string]*Localizer, len(bundle.languages))
+	languages := make([]string, len(bundle.languages))
 	defaultLocalizer := &Localizer{
 		bundle:   bundle,
 		language: bundle.defaultLanguage,
@@ -52,14 +56,26 @@ func NewPool(bundle *Bundle) *Pool {
 
 		localizers[i] = localizer
 		localizerByCode[code] = localizer
+		languages[i] = code
 	}
 
 	return &Pool{
 		bundle:           bundle,
 		localizers:       localizers,
 		localizerByCode:  localizerByCode,
+		languages:        languages,
 		defaultLocalizer: defaultLocalizer,
 	}
+}
+
+// Languages - возвращает коды всех языков пула в том порядке, в котором они переданы
+// в бандл. Коды канонические - ровно те, которые принимает LocalizerByCode и отдаёт
+// Localizer.Language(), поэтому неканоничная запись из конфигурации ("en_US") здесь
+// уже приведена к каноничной ("en-US").
+//
+// Пустым список не бывает: бандл без языков не создаётся (см. NewBundle).
+func (p *Pool) Languages() []string {
+	return slices.Clone(p.languages)
 }
 
 // LocalizerByCode - возвращает Localizer языка, код которого точно совпадает

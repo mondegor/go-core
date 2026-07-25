@@ -251,6 +251,24 @@ func testPool(t *testing.T) *mrlocale.Pool {
 	return mrlocale.NewPool(bundle)
 }
 
+// testPoolNonCanonical - создаёт Pool на неканоничных записях ["en_US", "RU-ru"]:
+// именно на них расхождение исходной записи и канона проявилось бы.
+func testPoolNonCanonical(t *testing.T) *mrlocale.Pool {
+	t.Helper()
+
+	bundle, err := mrlocale.NewBundle(
+		[]string{"en_US", "RU-ru"},
+		mrlocale.WithMessageProvider(
+			func(_ []language.Tag) (mrlocale.MessageProvider, error) {
+				return stubProvider{}, nil
+			},
+		),
+	)
+	require.NoError(t, err)
+
+	return mrlocale.NewPool(bundle)
+}
+
 func TestPool_LocalizerByCode(t *testing.T) {
 	t.Parallel()
 
@@ -366,4 +384,50 @@ func TestPool_LocalizerByCode_RegionalLanguages(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestPool_Languages - проверяет, что список отдаётся в порядке бандла.
+func TestPool_Languages(t *testing.T) {
+	t.Parallel()
+
+	// язык по умолчанию (de) задан не первым, но на порядок списка не влияет
+	assert.Equal(t, []string{"fr", "en", "de"}, testPool(t).Languages())
+}
+
+// TestPool_Languages_CanonicalCodes - проверяет, что коды приведены к канонической записи:
+// неканоничная запись из конфигурации ("en_US", "RU-ru") в списке уже нормализована.
+func TestPool_Languages_CanonicalCodes(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, []string{"en-US", "ru-RU"}, testPoolNonCanonical(t).Languages())
+}
+
+// TestPool_Languages_MatchLocalizerByCode - проверяет, что список и точный подбор опираются
+// на одни и те же коды: каждый код списка принимается LocalizerByCode. Бандл задан
+// неканонично, т.к. именно на нём расхождение записи проявилось бы.
+func TestPool_Languages_MatchLocalizerByCode(t *testing.T) {
+	t.Parallel()
+
+	pool := testPoolNonCanonical(t)
+
+	codes := pool.Languages()
+	require.NotEmpty(t, codes) // иначе проверка выродилась бы в пустой цикл
+
+	for _, code := range codes {
+		_, ok := pool.LocalizerByCode(code)
+		assert.True(t, ok, code)
+	}
+}
+
+// TestPool_Languages_ReturnsCopy - проверяет, что выданный срез принадлежит вызывающему:
+// его изменение на состав языков пула не влияет.
+func TestPool_Languages_ReturnsCopy(t *testing.T) {
+	t.Parallel()
+
+	pool := testPool(t)
+
+	got := pool.Languages()
+	got[0] = "xx"
+
+	assert.Equal(t, []string{"fr", "en", "de"}, pool.Languages())
 }

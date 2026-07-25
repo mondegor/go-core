@@ -3,6 +3,7 @@ package timezone
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 )
 
@@ -21,6 +22,7 @@ type (
 	// примерно впятеро (см. BenchmarkStd_LoadLocation и BenchmarkNewLocationList).
 	LocationList struct {
 		locations       map[string]*time.Location
+		names           []string
 		offsetIndex     map[offsetKey]string
 		defaultLocation *time.Location
 	}
@@ -56,8 +58,14 @@ func NewLocationList(names []string) *LocationList {
 
 	locations[nameUTC] = time.UTC
 
-	// индекс наполняется в порядке поступления имён, поэтому при совпадении
-	// пары (смещение, признак летнего времени) выигрывает последнее имя;
+	// имена в порядке регистрации: UTC первым, т.к. регистрируется всегда,
+	// далее - годные имена списка без повторов (см. TimeZones)
+	uniqNames := make([]string, 0, len(names)+1)
+	uniqNames = append(uniqNames, nameUTC)
+
+	// индекс наполняется в порядке поступления имён, поэтому при совпадении пары
+	// (смещение, признак летнего времени) выигрывает имя, чьё первое вхождение позднее:
+	// повторы до индекса не доходят, они отбрасываются ниже (см. NameByOffset);
 	// UTC регистрируется после списка и потому свою пару не уступает никому
 	offsetIndex := make(map[offsetKey]string, len(names)*2+1)
 
@@ -78,6 +86,20 @@ func NewLocationList(names []string) *LocationList {
 			continue
 		}
 
+		// повтор имени (в т.ч. явно указанный в списке UTC, он зарегистрирован до цикла)
+		// отбрасывается до загрузки: пояс уже зарегистрирован, а повторная регистрация
+		// заново оплатила бы загрузку с обходом года и переписала бы пару пояса в индексе
+		// подбора поверх более позднего имени списка (см. NameByOffset)
+		if loc, ok := locations[name]; ok {
+			// на пояс по умолчанию повтор влияет как обычное имя: если он оказался
+			// первым годным именем списка, то он же и задаёт пояс (см. Default)
+			if defaultLocation == nil {
+				defaultLocation = loc
+			}
+
+			continue
+		}
+
 		// сюда имя доходит только при пропущенной валидации
 		// либо при отсутствии самой базы часовых поясов в образе
 		loc, err := time.LoadLocation(name)
@@ -85,6 +107,7 @@ func NewLocationList(names []string) *LocationList {
 			continue
 		}
 
+		uniqNames = append(uniqNames, name)
 		locations[name] = loc
 
 		if defaultLocation == nil {
@@ -104,6 +127,7 @@ func NewLocationList(names []string) *LocationList {
 
 	return &LocationList{
 		locations:       locations,
+		names:           uniqNames,
 		offsetIndex:     offsetIndex,
 		defaultLocation: defaultLocation,
 	}
@@ -138,4 +162,24 @@ func (l *LocationList) LocationByName(value string) (*time.Location, error) {
 // ни одного пояса, возвращается time.UTC.
 func (l *LocationList) Default() *time.Location {
 	return l.defaultLocation
+}
+
+// TimeZones - возвращает имена всех поясов списка: UTC первым, далее годные имена
+// в порядке их указания при создании. Первым UTC отдаётся всегда, в том числе когда
+// в исходном списке он указан не первым: регистрируется он до обхода списка, поэтому
+// своей позиции в исходном порядке не занимает. Это ровно те имена, которые принимает
+// LocationByName; NameByOffset подбирает имя из них, но не любое: при совпадении
+// пары (смещение, признак летнего времени) он отдаёт лишь одно имя из совпавших
+// (см. NameByOffset), поэтому его ответы - подмножество этого списка.
+//
+// Список отличается от переданного в NewLocationList: UTC присутствует всегда,
+// даже если его не указывали, а имена пустые, "Local" и не найденные в базе часовых
+// поясов отброшены вместе с повторами. Поэтому источником списка поясов приложения
+// (для ответа API, для проверки присланного имени) должен быть именно этот метод,
+// а не исходная конфигурация: иначе проверка отвергала бы UTC, который список
+// предоставляет всегда, а конфигурация может и не содержать.
+//
+// Пустым список не бывает: UTC в нём есть всегда.
+func (l *LocationList) TimeZones() []string {
+	return slices.Clone(l.names)
 }

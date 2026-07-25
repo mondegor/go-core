@@ -65,7 +65,7 @@ func NewProvider(
 
 // Domains - возвращает список доступных доменов для локализации.
 func (p *Provider) Domains() []string {
-	return p.domains
+	return slices.Clone(p.domains)
 }
 
 // Localize - возвращает локализованное сообщение с подставленными аргументами.

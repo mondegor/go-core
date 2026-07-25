@@ -11,13 +11,21 @@ import (
 	"github.com/mondegor/go-core/examples/mrlocale/internal/dict/fruitcat"
 	"github.com/mondegor/go-core/examples/mrlocale/internal/dict/msgcat"
 	"github.com/mondegor/go-core/mrlocale"
+	"github.com/mondegor/go-core/mrlocale/config"
 	"github.com/mondegor/go-core/mrlocale/provider/gotext"
 )
 
 // main - пример формирование сообщений, ошибок и свойств объектов на указанном языке.
 func main() {
-	// языки бандла: тот же список ниже используется для обхода локализаторов
+	// языки из конфигурации: годятся для создания бандла, но не как источник списка
+	// языков приложения - для него есть Pool.Languages (см. обход локализаторов ниже)
 	languages := []string{"ru-RU", "en-US"}
+
+	// неканоничную запись ("ru_RU") бандл принял бы, но наружу пул отдавал бы канон,
+	// поэтому список из конфигурации проверяется до создания бандла
+	if err := config.ValidateLanguages(languages); err != nil {
+		panic(err)
+	}
 
 	bundle, err := mrlocale.NewBundle(
 		languages,
@@ -52,10 +60,13 @@ func main() {
 
 	fmt.Println("--------------------------------------------------")
 
-	for _, lang := range languages {
-		lz = pool.Localizer(language.MustParse(lang))
+	// список языков берётся у пула, а не у конфигурации: коды в нём канонические,
+	// поэтому клиенту отдаются ровно те коды, которые принимает LocalizerByCode
+	for _, code := range pool.Languages() {
+		// код взят у самого пула, поэтому точный подбор заведомо удачен
+		lz, _ := pool.LocalizerByCode(code)
 
-		fmt.Printf("language: %s\n", lang)
+		fmt.Printf("language: %s\n", code)
 		fmt.Println("..................................................")
 
 		fmt.Println(lz.Translate("Message example with param %s", "param1"))

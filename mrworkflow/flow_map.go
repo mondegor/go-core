@@ -1,8 +1,18 @@
 package mrworkflow
 
+import (
+	"maps"
+	"slices"
+)
+
 type (
 	// FlowMap - интерфейс управления переходами между статусами.
 	// Определяет, какие статусы зарегистрированы и какие переходы между ними допустимы.
+	//
+	// Методы, возвращающие списки, отдают копию: изменение выданного среза
+	// на состояние карты не влияет. Пустой список отдаётся как nil, а не как пустой
+	// срез, поэтому по ответу PossibleToStatuses и PossibleFromStatuses нельзя
+	// отличить статус без переходов от незарегистрированного - для этого есть Exists.
 	FlowMap[Status ~uint8] interface {
 		Registered() []Status
 		Exists(status Status) bool
@@ -30,13 +40,43 @@ type (
 // NewFlowMap - создаёт карту допустимых переходов между статусами.
 // Параметр list - список узлов переходов (FlowNode), определяющих граф состояний.
 // Автоматически строит двунаправленную карту: from→to и to→from.
+//
+// Каждый исходный статус описывается одним узлом: список - это описание графа целиком,
+// а не набор дополнений к нему. Повтор From отбрасывается целиком, поэтому выигрывает
+// первое вхождение: переходы повтора не попадают ни в прямую карту, ни в обратную,
+// и статус, который называл только повтор, зарегистрированным не считается.
+//
+// Отбрасывается именно узел целиком, а не одна из карт: если оставить повтору обратную
+// карту, то прямая сохранила бы переходы первого узла, а обратная - обоих,
+// и IsPossible разошёлся бы с PossibleFromStatuses.
 func NewFlowMap[Status ~uint8](list []FlowNode[Status]) FlowMap[Status] {
 	fromToMap := make(map[Status][]Status, len(list))
 	toFromMap := make(map[Status][]Status, len(list))
 	registeredMap := make(map[Status]bool, len(list))
 
 	for _, item := range list {
-		fromToMap[item.From] = item.To
+		// повтор узла отбрасывается до заполнения карт: проверяется наличие ключа,
+		// а не registeredMap, т.к. в последнем статус мог быть отмечен как цель
+		// перехода, а собственного узла ещё не иметь. Значение ключа при этом
+		// может быть nil (узел без переходов), поэтому годится только запрос с ok
+		if _, ok := fromToMap[item.From]; ok {
+			continue
+		}
+
+		// список переходов копируется, а не берётся как есть: иначе состояние карты
+		// осталось бы связанным с FlowNode.To вызывающего, и его изменение после
+		// создания карты меняло бы набор допустимых переходов.
+		// Пустой список сводится к nil отдельной проверкой, а не одним slices.Clone:
+		// Clone сохраняет nil только для nil, а срез нулевой длины ([]Status{}) вернул бы
+		// таким же не-nil, и узел без переходов ответил бы пустым срезом вместо nil
+		// в нарушение общего правила (см. FlowMap)
+		var toStatuses []Status
+
+		if len(item.To) > 0 {
+			toStatuses = slices.Clone(item.To)
+		}
+
+		fromToMap[item.From] = toStatuses
 		registeredMap[item.From] = true
 
 		for _, to := range item.To {
@@ -45,11 +85,7 @@ func NewFlowMap[Status ~uint8](list []FlowNode[Status]) FlowMap[Status] {
 		}
 	}
 
-	registered := make([]Status, 0, len(registeredMap))
-
-	for status := range registeredMap {
-		registered = append(registered, status)
-	}
+	registered := slices.Collect(maps.Keys(registeredMap))
 
 	return &statusFlow[Status]{
 		fromToMap:     fromToMap,
@@ -61,7 +97,7 @@ func NewFlowMap[Status ~uint8](list []FlowNode[Status]) FlowMap[Status] {
 
 // Registered - возвращает список зарегистрированных статусов в карте.
 func (f *statusFlow[Status]) Registered() []Status {
-	return f.registered
+	return slices.Clone(f.registered)
 }
 
 // Exists - сообщает, имеется ли данный статус в карте статусов.
@@ -87,18 +123,10 @@ func (f *statusFlow[Status]) IsPossible(from, to Status) bool {
 
 // PossibleToStatuses - возвращает список статусов в которые можно переключить указанный статус.
 func (f *statusFlow[Status]) PossibleToStatuses(from Status) []Status {
-	if toStatuses, ok := f.fromToMap[from]; ok {
-		return toStatuses
-	}
-
-	return nil
+	return slices.Clone(f.fromToMap[from])
 }
 
 // PossibleFromStatuses - возвращает список статусов из которых можно переключиться в указанный статус.
 func (f *statusFlow[Status]) PossibleFromStatuses(to Status) []Status {
-	if fromStatuses, ok := f.toFromMap[to]; !ok {
-		return fromStatuses
-	}
-
-	return nil
+	return slices.Clone(f.toFromMap[to])
 }

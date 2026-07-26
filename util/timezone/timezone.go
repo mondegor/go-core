@@ -73,7 +73,7 @@ func NewLocationList(names []string) *LocationList {
 	// по одному годовому окну, а не каждый по своему
 	now := time.Now()
 
-	// пояс по умолчанию - первое годное имя списка (см. Default)
+	// часовой пояс по умолчанию - первое годное имя списка (см. Default)
 	var defaultLocation *time.Location
 
 	for _, name := range names {
@@ -91,10 +91,8 @@ func NewLocationList(names []string) *LocationList {
 		// заново оплатила бы загрузку с обходом года и переписала бы пару пояса в индексе
 		// подбора поверх более позднего имени списка (см. NameByOffset)
 		if loc, ok := locations[name]; ok {
-			// на пояс по умолчанию повтор влияет как обычное имя: если он оказался
-			// первым годным именем списка, то он же и задаёт пояс (см. Default)
 			if defaultLocation == nil {
-				defaultLocation = loc
+				defaultLocation = loc // это условие сработает только при name == nameUTC
 			}
 
 			continue

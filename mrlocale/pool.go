@@ -73,7 +73,8 @@ func NewPool(bundle *Bundle) *Pool {
 // Localizer.Language(), поэтому неканоничная запись из конфигурации ("en_US") здесь
 // уже приведена к каноничной ("en-US").
 //
-// Пустым список не бывает: бандл без языков не создаётся (см. NewBundle).
+// Пустым список не бывает: бандл, созданный без языков, подставляет
+// вместо пустого списка "en-US" (см. NewBundle).
 func (p *Pool) Languages() []string {
 	return slices.Clone(p.languages)
 }

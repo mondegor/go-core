@@ -1,7 +1,6 @@
 package mrlocale
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 
@@ -12,6 +11,10 @@ import (
 const (
 	DefaultMessagesDomain = "messages"
 	DefaultErrorsDomain   = "errors"
+)
+
+const (
+	fallbackLanguage = "en-US"
 )
 
 type (
@@ -40,6 +43,11 @@ type (
 //
 // Первый язык в списке становится языком по умолчанию, если не задан явно через WithDefaultLanguage.
 //
+// Пустой список отказом не является: вместо него подставляется "en-US", и он становится
+// единственным языком бандла и его языком по умолчанию. Опция WithDefaultLanguage при этом
+// годится только для того же "en-US" (запись любая: "en_US", "en-us"), а любой другой язык
+// отвергается обычной сверкой со списком.
+//
 // Запись языка принимается любая разбираемая, в т.ч. неканоничная ("en_US", "ru-ru"),
 // но наружу пул отдаёт уже канон ("en-US", "ru-RU"), см. Pool.Languages. Поэтому список
 // из конфигурации годится для создания бандла, но не годится ни как источник кодов
@@ -58,7 +66,7 @@ func NewBundle(languages []string, opts ...BundleOption) (*Bundle, error) {
 	}
 
 	if len(languages) == 0 {
-		return nil, errors.New("bundle create: no matching language found")
+		languages = []string{fallbackLanguage}
 	}
 
 	languageTags := make([]language.Tag, len(languages))

@@ -8,7 +8,7 @@ require (
 	github.com/lmittmann/tint v1.2.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
-	golang.org/x/exp v0.0.0-20260718201538-764159d718ef
+	golang.org/x/exp v0.0.0-20260727155853-b88d891fe743
 	golang.org/x/text v0.40.0
 	gopkg.in/yaml.v3 v3.0.1
 )

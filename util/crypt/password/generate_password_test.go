@@ -79,7 +79,7 @@ func TestGenerate_CharSet(t *testing.T) {
 		vowels     = "aeiuyAEIUY"
 		consonants = "bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ"
 		numerals   = "0123456789"
-		signs      = "!$%&.<=>?@_~"
+		signs      = "!#$%&()*+,-./:;<=>?@[]^_{}~"
 	)
 
 	type testCase struct {
@@ -140,6 +140,18 @@ func TestGenerate_NoAmbiguousLetters(t *testing.T) {
 	}
 }
 
+// TestGenerate_NoAmbiguousSigns проверяет, что в пароле отсутствуют кавычки, обратный слэш и |.
+func TestGenerate_NoAmbiguousSigns(t *testing.T) {
+	t.Parallel()
+
+	gen := password.NewGenerator()
+
+	for i := 0; i < 100; i++ {
+		pw := gen.Generate(30, password.CharSigns)
+		assert.False(t, strings.ContainsAny(pw, "\"'`\\|"), "Пароль не должен содержать кавычки, '\\' и '|': %q", pw)
+	}
+}
+
 // TestGenerate_CharAll_ContainsAllKinds проверяет, что при использовании CharAll
 // в пароле присутствуют все виды символов (при достаточной длине).
 func TestGenerate_CharAll_ContainsAllKinds(t *testing.T) {
@@ -150,7 +162,7 @@ func TestGenerate_CharAll_ContainsAllKinds(t *testing.T) {
 	vowels := "aeiuyAEIUY"
 	consonants := "bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ"
 	numerals := "123456789"
-	signs := "!$%&.<=>?@_~"
+	signs := "!#$%&()*+,-./:;<=>?@[]^_{}~"
 
 	// Генерируем длинный пароль для повышения вероятности всех категорий
 	pw := gen.Generate(100, password.CharAll)

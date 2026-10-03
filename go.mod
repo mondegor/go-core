@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.11.0
-	github.com/lmittmann/tint v1.2.0
+	github.com/lmittmann/tint v1.2.1
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
 	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba

@@ -20,11 +20,14 @@ const (
 	passTypeSign
 )
 
+// Размеры групп символов для расчёта энтропии: совпадают с наборами генератора (pwCharSets),
+// поэтому менять их нужно вместе с ними. Для пароля, придуманного пользователем, оценка
+// получается чуть консервативнее: символы, исключённые из генератора, размер групп не увеличивают.
 const (
-	passTypeNumeralLen  = 10
-	passTypeBigABCLen   = 26
-	passTypeSmallABCLen = 26
-	passTypeSignLen     = 20
+	passTypeNumeralLen  = 9
+	passTypeBigABCLen   = 25
+	passTypeSmallABCLen = 25
+	passTypeSignLen     = 27
 )
 
 type (
@@ -86,22 +89,24 @@ func CalcStrength(value string) PassStrength {
 	}
 
 	if totalSets > 1 { // минимально два набора символов должно использоваться
-		// вычисление информационной энтропии
+		// вычисление информационной энтропии;
+		// в комментариях к порогам указано, сколько уникальных символов гарантирует уровень
+		// при любом сочетании N наборов (расчёт по самому узкому сочетанию), в скобках - биты
 		bits := uint64(float64(len(uniqChars)) * math.Log2(float64(totalLen)))
 
-		if bits >= 76 && totalSets > 3 { // min(12 uniq chars and 4 sets[76])
+		if bits >= 76 && totalSets > 3 { // 12 uniq chars and 4 sets[77]
 			return PassStrengthBest
 		}
 
-		if bits >= 63 && totalSets > 2 { // min(10 uniq chars and 4 sets[63] OR 11 uniq chars and 3 sets[65])
+		if bits >= 63 && totalSets > 2 { // 10 uniq chars and 4 sets[64] OR 11 uniq chars and 3 sets[64]
 			return PassStrengthStrong
 		}
 
-		if bits >= 56 { // min(9 uniq chars and 4 sets[57] OR 10 uniq chars and 3 sets[58] OR 11 uniq chars and 2 sets[56])
+		if bits >= 56 { // 9 uniq chars and 4 sets[57] OR 10 uniq chars and 3 sets[58] OR 12 uniq chars and 2 sets[61]
 			return PassStrengthMedium
 		}
 
-		if bits >= 44 { // min(7 uniq chars and 4 sets[44] OR 8 uniq chars and 3 sets[46] OR 9 uniq chars and 2 sets[46])
+		if bits >= 44 { // 7 uniq chars and 4 sets[44] OR 8 uniq chars and 3 sets[47] OR 9 uniq chars and 2 sets[45]
 			return PassStrengthWeak
 		}
 	}

@@ -19,8 +19,8 @@ const (
 var pwCharSets = [...]pwCharSet{ //nolint:gochecknoglobals
 	{CharVowels, 2, true, 10, []byte("aeiuyAEIUY")}, // oO - символы удалены, чтобы не перепутать с нулём
 	{CharConsonants, 2, true, 40, []byte("bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ")},
-	{CharNumerals, 1, false, 9, []byte("123456789")}, // 0 - символ удалён, чтобы не перепутать с символами oO
-	{CharSigns, 1, false, 12, []byte("!$%&.<=>?@_~")},
+	{CharNumerals, 1, false, 9, []byte("123456789")},                 // 0 - символ удалён, чтобы не перепутать с символами oO
+	{CharSigns, 1, false, 27, []byte("!#$%&()*+,-./:;<=>?@[]^_{}~")}, // "'`\| - символы удалены
 }
 
 type (

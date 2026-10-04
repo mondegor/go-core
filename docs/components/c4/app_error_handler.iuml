@@ -1,0 +1,1 @@
+Container(app_error_handler, "ErrorHandler", "Go, реализация errors.Handler", "Единая точка обработки ошибок приложения: логирование, трассировка, мониторинг")

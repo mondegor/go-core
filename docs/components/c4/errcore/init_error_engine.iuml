@@ -1,1 +1,0 @@
-Component(init_error_engine, "InitErrorEngine", "errcore", "Отвечает за инициализацию ProtoError ошибок их обработчика")

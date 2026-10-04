@@ -1,0 +1,1 @@
+Component(init_error_handler, "InitErrorHandler", "wire/errors", "Фабрика Handler по умолчанию: только логирует ошибки, выбирая уровень по виду ошибки")

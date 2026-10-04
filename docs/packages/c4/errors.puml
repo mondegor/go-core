@@ -1,0 +1,32 @@
+@startuml
+!include <C4/C4_Component>
+
+' title Подсистема формирования ошибок
+
+Boundary(errors, "Подсистема errors") {
+  !include components/c4/errors/error_kind.iuml
+  !include components/c4/errors/error_handler.iuml
+  !include components/c4/errors/runtime_proto_error.iuml
+  !include components/c4/errors/user_proto_error.iuml
+  !include components/c4/errors/user_error.iuml
+  !include components/c4/errors/custom_error.iuml
+  !include components/c4/errors/error_wrapper.iuml
+  !include components/c4/errors/error_hint.iuml
+  !include components/c4/errors/id_generator.iuml
+  !include components/c4/errors/stack_caller.iuml
+}
+
+Rel(runtime_proto_error, error_kind, "Имеет вид system или internal")
+Rel(user_proto_error, error_kind, "Имеет вид user")
+Rel(user_error, error_kind, "Имеет вид user")
+Rel(runtime_proto_error, error_hint, "Прикрепляет к экземпляру ошибки данные из колбэка WithOnCreate (обычно Hint)")
+Rel(error_hint, id_generator, "Хранит ID экземпляра ошибки, сгенерированный при создании")
+Rel(error_hint, stack_caller, "Хранит стек вызовов, сформированный при создании")
+Rel(custom_error, user_proto_error, "Оборачивает, уточняя код ошибки")
+Rel(custom_error, user_error, "Оборачивает, уточняя код ошибки")
+Rel(error_handler, error_kind, "Реализация определяет итоговый вид обрабатываемой ошибки")
+Rel(error_wrapper, error_kind, "Определяет вид оборачиваемой ошибки")
+Rel(error_wrapper, runtime_proto_error, "Оборачивает ошибки без вида и internal с атрибутами в системные/внутренние ошибки")
+Rel(error_wrapper, custom_error, "Оборачивает пользовательские ошибки в CustomError (CustomErrorWrapper)")
+
+@enduml

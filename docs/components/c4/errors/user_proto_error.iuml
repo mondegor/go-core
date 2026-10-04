@@ -1,0 +1,1 @@
+Component(user_proto_error, "UserProtoError", "errors/user", "Прототип пользовательских ошибок с аргументами")

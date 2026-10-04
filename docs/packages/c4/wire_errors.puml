@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Component>
+
+' title Хелперы-фабрики для подключения ошибок
+
+Boundary(wire_errors, "Хелперы-фабрики wire/errors") {
+  !include components/c4/wire_errors/init_errors.iuml
+  !include components/c4/wire_errors/init_error_handler.iuml
+}
+
+!include components/c4/errors/runtime_proto_error.iuml
+!include components/c4/errors/error_hint.iuml
+!include components/c4/errors/id_generator.iuml
+!include components/c4/errors/stack_caller.iuml
+!include components/c4/errors/error_handler.iuml
+!include components/c4/mrlog/logger.iuml
+
+Rel(init_errors, runtime_proto_error, "Регистрирует опции WithOnCreate: Hint с ID и стеком вызовов")
+Rel(init_errors, error_hint, "Создаёт Hint для экземпляра ошибки, если его нет в обёрнутой ошибке")
+Rel(init_errors, id_generator, "Генерирует ID экземпляра ошибки")
+Rel(init_errors, stack_caller, "Формирует стек вызовов (только для internal при HasCaller)")
+Rel(init_error_handler, error_handler, "Создаёт реализацию Handler по умолчанию")
+Rel(init_error_handler, logger, "Логирует ошибки")
+
+@enduml

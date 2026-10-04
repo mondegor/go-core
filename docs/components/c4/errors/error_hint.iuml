@@ -1,0 +1,1 @@
+Component(error_hint, "Hint", "errors/runtime/hint", "Содержит вид, ID и стек вызовов экземпляра ошибки")

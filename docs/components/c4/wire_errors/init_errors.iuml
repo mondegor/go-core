@@ -1,0 +1,1 @@
+Component(init_errors, "InitErrors", "wire/errors", "Настраивает опции runtime-ошибок: ID и стек вызовов (если включён HasCaller) для internal, только ID для system")

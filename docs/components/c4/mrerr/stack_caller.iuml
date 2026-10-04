@@ -1,1 +1,0 @@
-Component(stack_caller, "StackTraceCaller", "mrerr", "Формирует стек вызовов функций в момент создания экземпляра ошибки")

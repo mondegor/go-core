@@ -1,0 +1,1 @@
+Component(stack_caller, "StackTraceCaller", "errors/runtime/stacktrace", "Формирует стек вызовов функций в момент создания экземпляра ошибки")

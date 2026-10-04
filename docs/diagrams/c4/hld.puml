@@ -6,28 +6,31 @@ LAYOUT_WITH_LEGEND()
 
 ' title Верхнеуровневая архитектура системы обработки ошибок
 
-!include components/c4/ext/sentry.iuml
+!include components/c4/ext/observability.iuml
 !include components/c4/ext/user.iuml
 !include components/c4/ext/developer.iuml
 
 Container_Boundary(project, "Конкретный проект") {
   !include components/c4/app.iuml
-  !include components/c4/mrerr.iuml
-  !include components/c4/err_core.iuml
+  !include components/c4/app_error_handler.iuml
 }
 
-Rel(app, mrerr, "Создаёт типы ошибок используемые системой на основе ProtoError")
-Rel(app, err_core, "Инициализирует типы ошибок, привязывает необходимые для них обработчики, такие как: IDGenerator, StackTraceCaller, SentryHandler")
-Rel(app, err_core, "Настраивает персональный для системы ErrorHandler")
+Boundary(go_core, "Библиотека go-core") {
+  !include components/c4/errors.iuml
+  !include components/c4/wire_errors.iuml
+}
 
-Rel(app, mrerr, "Создаёт новые InstantError, оборачивает переданные из других слоёв системы")
-Rel(mrerr, err_core, "Формирует события о возникновении ошибок, генерирует ошибкам их ID и формирует для них стек вызовов")
-Rel(err_core, sentry, "Отправляет информацию об ошибках в момент их возникновений")
+Rel(app, errors, "Определяет в каждом слое свои ошибки на основе прототипов (RuntimeProtoError, UserProtoError, UserError), создаёт из них экземпляры ошибок и оборачивает ошибки, переданные из других слоёв системы (ErrorWrapper)")
+Rel(app, wire_errors, "Может использовать фабрики по умолчанию: опции ошибок (InitErrors), Handler (InitErrorHandler)")
+Rel(wire_errors, errors, "Регистрирует опции создания ошибок: ID для system, ID и стек вызовов (при HasCaller) для internal (Hint)")
 
-Rel(app, err_core, "Передаёт ошибки с их персональным ID в ErrorHandler")
+Rel(app, app_error_handler, "Передаёт ошибки (system и internal — с их персональным ID)")
+Rel(app_error_handler, errors, "Реализует интерфейс Handler, определяет итоговый вид ошибки (Kind)")
+Rel(wire_errors, app_error_handler, "Может предоставить реализацию по умолчанию (InitErrorHandler): логирование через mrlog")
+Rel(app_error_handler, observability, "Логирует, трассирует ошибки и отправляет информацию о них")
 Rel(app, user, "Сообщает пользователю об ошибках с их персональным ID")
 
-Rel(developer, sentry, "Анализирует ошибки")
+Rel(developer, observability, "Анализирует ошибки")
 Rel(developer, app, "Устраняет проблемы, на основе анализа создаёт новые типы ошибок")
 
 Rel(user, developer, "Сообщает о проблеме через внешние каналы, указывая персональный ID ошибки")

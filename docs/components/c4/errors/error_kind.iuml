@@ -1,0 +1,1 @@
+Component(error_kind, "Kind", "errors/kind", "Определяет итоговый вид ошибки (user, system, internal) по цепочке ошибок")

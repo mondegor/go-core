@@ -1,0 +1,1 @@
+Component(custom_error, "CustomError", "errors/custom", "Пользовательская ошибка с уточнённым кодом ошибки")

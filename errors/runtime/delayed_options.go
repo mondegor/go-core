@@ -60,9 +60,7 @@ func NewDelayed(errKind kind.Enum, text string, opts ...Option) ProtoError {
 	}
 
 	// устанавливаются опции по умолчанию
-	for _, opt := range defopts.handler.Options(p.kind, p.text) {
-		opt(p)
-	}
+	applyDefaultOptions(p, defopts.handler.Options(p.kind, p.text))
 
 	return p
 }
@@ -100,11 +98,29 @@ func InitDelayedOptions(handler OptionsHandler) {
 	// устанавливаются опции по умолчанию для каждой созданной ошибки, в момент инициализации приложения,
 	// но только если эти опции уже не были установлены в момент создания этих ошибок
 	for _, p := range defopts.delayed {
-		for _, opt := range handler.Options(p.kind, p.text) {
-			opt(p)
-		}
+		applyDefaultOptions(p, handler.Options(p.kind, p.text))
 	}
 
 	defopts.handler = handler
 	defopts.delayed = nil
+}
+
+// applyDefaultOptions - применяет к прототипу опции по умолчанию, не перезаписывая
+// значения, явно установленные при его создании. Опции применяются к временному
+// прототипу, из которого переносятся только незаданные поля.
+// При добавлении новой опции её поле необходимо добавить сюда.
+func applyDefaultOptions(p *protoError, opts []Option) {
+	if len(opts) == 0 {
+		return
+	}
+
+	var defaults protoError
+
+	for _, opt := range opts {
+		opt(&defaults)
+	}
+
+	if p.onCreate == nil {
+		p.onCreate = defaults.onCreate
+	}
 }

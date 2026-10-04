@@ -1,0 +1,1 @@
+Component(id_generator, "IDGenerator", "errors/runtime/instance", "Генерирует ID ошибки при создании её конкретного экземпляра")

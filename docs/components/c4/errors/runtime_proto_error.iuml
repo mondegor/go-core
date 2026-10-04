@@ -1,0 +1,1 @@
+Component(runtime_proto_error, "RuntimeProtoError", "errors/runtime", "Прототип системных и внутренних ошибок. Создаёт их экземпляры на местах возникновения ошибок (New, Wrap, WithDetails, WithError), при этом может обернуть уже имеющиеся ошибки")

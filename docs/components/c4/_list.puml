@@ -1,30 +1,34 @@
 @startuml
 !include <C4/C4_Component>
 
-' mrerr
-!include components/c4/mrerr/instant_error.iuml
-!include components/c4/mrerr/custom_error.iuml
-!include components/c4/mrerr/id_generator.iuml
-!include components/c4/mrerr/proto_error.iuml
-!include components/c4/mrerr/stack_caller.iuml
+' errors
+!include components/c4/errors/error_kind.iuml
+!include components/c4/errors/error_handler.iuml
+!include components/c4/errors/runtime_proto_error.iuml
+!include components/c4/errors/user_proto_error.iuml
+!include components/c4/errors/user_error.iuml
+!include components/c4/errors/custom_error.iuml
+!include components/c4/errors/error_wrapper.iuml
+!include components/c4/errors/error_hint.iuml
+!include components/c4/errors/id_generator.iuml
+!include components/c4/errors/stack_caller.iuml
 
-' errcore
-!include components/c4/errcore/error_handler.iuml
-!include components/c4/errcore/init_error_engine.iuml
-!include components/c4/errcore/logger.iuml
-!include components/c4/errcore/sentry_handler.iuml
+' wire/errors
+!include components/c4/wire_errors/init_errors.iuml
+!include components/c4/wire_errors/init_error_handler.iuml
 
-' app
-!include components/c4/app/app_component.iuml
-!include components/c4/app/app_controller.iuml
+' mrlog
+!include components/c4/mrlog/logger.iuml
 
 ' ext
-!include components/c4/ext/sentry.iuml
+!include components/c4/ext/observability.iuml
 !include components/c4/ext/user.iuml
+!include components/c4/ext/developer.iuml
 
 ' containers
 !include components/c4/app.iuml
-!include components/c4/mrerr.iuml
-!include components/c4/err_core.iuml
+!include components/c4/errors.iuml
+!include components/c4/wire_errors.iuml
+!include components/c4/app_error_handler.iuml
 
 @enduml

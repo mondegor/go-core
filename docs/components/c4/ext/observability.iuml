@@ -1,0 +1,1 @@
+System_Ext(observability, "Observability", "Внешние системы логирования, трассировки и мониторинга ошибок (например, журналы/агрегаторы логов через slog, OpenTelemetry, Sentry)")

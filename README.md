@@ -10,6 +10,8 @@
 - предоставляет инструменты для более удобной обработки ошибок как пользовательских,
   так и программных согласующихся с Go подходом (более подробно см. ниже);
 - предоставляет систему логирования сообщений и ошибок на основе `slog`;
+- содержит вспомогательные подсистемы: работа с хранилищами и PostgreSQL, фоновые процессы,
+  контроль доступа, трассировка запросов, утилиты;
 
 ## Подключение библиотеки
 `go get -u github.com/mondegor/go-core@v0.15.3`
@@ -20,8 +22,11 @@
 - `git clone git@github.com:mondegor/go-core.git .`
 - `cp .env.dist .env`
 - `mrcmd go-dev deps` // загрузка зависимостей проекта
-- Для работы утилит `gofumpt`, `goimports`, `mockgen` необходимо в `.env` проверить
-  значения переменных `GO_DEV_TOOLS_INSTALL_*` и запустить `mrcmd go-dev install-tools`
+- Для работы утилит `gofumpt`, `goimports`, `gci`, `golangci-lint`, `mockgen`, `gotext` необходимо запустить
+  `mrcmd go-dev install-tools`. По умолчанию `gofumpt`, `goimports`, `gci`, `golangci-lint` устанавливаются
+  последних версий; чтобы закрепить версию, раскомментируйте переменную `GO_DEV_TOOLS_INSTALL_*` в `.env`.
+  `mockgen` и `gotext` в go-dev по умолчанию выключены — их версии заданы в `.env.dist`
+- `go install ./cmd/gotext-catalog-fix` // установка утилиты, используемой при генерации каталогов локализации
 
 ### Консольные команды используемые при разработке библиотеки
 
@@ -31,16 +36,18 @@
 - `mrcmd go-dev help` // выводит список всех доступных go-dev команд;
 - `mrcmd go-dev generate` // генерирует go файлы через встроенный механизм go:generate;
 - `mrcmd go-dev gofumpt-fix` // исправляет форматирование кода (`gofumpt -l -w -extra ./`);
-- `mrcmd go-dev goimports-fix` // исправляет imports, если это требуется (`goimports -d -local ${GO_DEV_IMPORTS_LOCAL_PREFIXES} ./`);
-- `mrcmd go-dev lint` // запускает линтеров для проверки кода (на основе `.golangci.yaml`);
+- `mrcmd go-dev goimports-fix` // исправляет imports, если это требуется (`goimports -l -w -local ${GO_DEV_IMPORTS_LOCAL_PREFIXES}` для всех go файлов, кроме сгенерированных);
+- `mrcmd go-dev gci-fix` // упорядочивает imports (`gci`);
+- `mrcmd go-dev lint` // запускает линтеры для проверки кода (на основе `.golangci.yaml`);
 - `mrcmd go-dev test` // запускает тесты библиотеки;
 - `mrcmd go-dev test-report` // запускает тесты библиотеки с формированием отчёта о покрытии кода (`test-coverage-full.html`);
 - `mrcmd plantuml build-all` // генерирует файлы изображений из `.puml` [подробнее](https://github.com/mondegor/mrcmd-plugins/blob/master/plantuml/README.md#%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0-%D1%81-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D0%B5%D0%B9-%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B0-markdown--plantuml);
 
 #### Короткий вариант выше приведённых команд (Makefile)
 - `make deps` // аналог `mrcmd go-dev deps`
+- `make deps-upgrade` // аналог `mrcmd go-dev get -u ./...` + `mrcmd go-dev tidy`
 - `make generate` // аналог `mrcmd go-dev generate`
-- `make lint` // аналог `mrcmd go-dev run`
+- `make lint` // аналог `mrcmd go-dev gofumpt-fix` + `goimports-fix` + `gci-fix` + `lint`
 - `make test` // аналог `mrcmd go-dev test`
 - `make test-report` // аналог `mrcmd go-dev test-report`
 - `make plantuml` // аналог `mrcmd plantuml build-all`
@@ -108,32 +115,37 @@
 ## Пример архитектуры обработки ошибок
 
 ### Подсистема формирования ошибок
-- [ProtoError](https://github.com/mondegor/go-core/blob/master/mrerrors/proto_error.go);
-- [InstantError](https://github.com/mondegor/go-core/blob/master/mrerrors/instant_error.go);
-- [CustomError](https://github.com/mondegor/go-core/blob/master/mrerr/custom_error.go);
-- [GenerateErrorID](https://github.com/mondegor/go-core/blob/master/mrerr/generate/instance_id.go);
-- [ErrorStackTrace](https://github.com/mondegor/go-core/blob/master/mrerr/stacktrace/caller.go);
-- [Примеры базового пакета](https://github.com/mondegor/go-core/tree/master/examples/mrerrors);
-- [Примеры расширенного пакета](https://github.com/mondegor/go-core/tree/master/examples/mrerr);
+- [Kind](errors/kind/kind.go) - вид ошибки (user, system, internal) и его определение по цепочке ошибок;
+- [RuntimeProtoError](errors/runtime/runtime_error.go) - прототип системных и внутренних ошибок,
+  из которого создаются их экземпляры (`New`, `Wrap`, `WithDetails`, `WithError`);
+- [UserProtoError](errors/user/user_error.go) - прототип пользовательских ошибок с аргументами;
+- [UserError](errors/userfast/user_error.go) - пользовательская ошибка без аргументов;
+- [CustomError](errors/custom/custom_error.go) - пользовательская ошибка с уточнённым кодом;
+- [Hint](errors/runtime/hint/hint.go) - вид, ID и стек вызовов экземпляра ошибки;
+- [GenerateID](errors/runtime/instance/generate_id.go) - генерация ID экземпляра ошибки;
+- [StackTrace Caller](errors/runtime/stacktrace/caller.go) - формирование стека вызовов;
+- [ErrorWrapper](errors/wrap/error_wrapper.go) - обёртывание ошибок на границах слоёв;
+- [Примеры](examples/errors);
 
-![image](docs/resources/packages/c4/mrerr.svg)
+![image](docs/resources/packages/c4/errors.svg)
 
 ### Подсистема обработки ошибок
-- [Создание и инициализация ошибок опциями по умолчанию](https://github.com/mondegor/go-core/blob/master/mrerr/error.go); 
-- [ErrorHandler](https://github.com/mondegor/go-core/blob/master/mrerr/error_handler.go);
+Библиотека предоставляет единую точку обработки ошибок — интерфейс `Handler`. Приложение реализует его и
+само подключает нужные ему логирование, трассировку и мониторинг. Пакет `wire/errors` содержит
+хелперы-фабрики по умолчанию и служит примером подключения; его можно полностью заменить.
+
+- [Инициализация ошибок опциями по умолчанию](wire/errors/errors.go);
+- [Handler](errors/handler/handler.go) и [его реализация по умолчанию](wire/errors/error_handler.go);
 - Библиотека готовых типов ошибок:
-  - [Внутренние ошибки](https://github.com/mondegor/go-core/blob/master/mrerr/mr/errors_internal.go);
-  - [Инфраструктурные ошибки](https://github.com/mondegor/go-core/blob/master/mrerr/mr/errors_storage.go);
-  - [Ошибки бизнес логики](https://github.com/mondegor/go-core/blob/master/mrerr/mr/errors_usecase.go);
-  - [Http ошибки](https://github.com/mondegor/go-core/blob/master/mrerr/mr/errors_http.go);
+  - [Внутренние ошибки](errors/internal_errors.go);
+  - [Системные ошибки](errors/system_errors.go);
+  - [Пользовательские ошибки, в том числе Http](errors/user_errors.go);
+  - [Ошибки событий](errors/event_errors.go);
 - Врапперы ошибок:
-  - [Для инфраструктурного слоя](https://github.com/mondegor/go-core/blob/master/mrerr/mr/wrapper_storage.go);
-  - [Для слоя бизнес логики](https://github.com/mondegor/go-core/blob/master/mrerr/mr/wrapper_usecase.go);
+  - [Для инфраструктурного слоя и слоя бизнес логики](errors/error_wrappers.go);
+  - [Для пользовательских ошибок с уточнённым кодом](errors/custom_wrappers.go);
 
-![image](docs/resources/packages/c4/errcore.svg)
-
-### Сервис использующий обработку ошибок
-![image](docs/resources/packages/c4/app.svg)
+![image](docs/resources/packages/c4/wire_errors.svg)
 
 ### Верхнеуровневая архитектура системы обработки ошибок
 ![image](docs/resources/diagrams/c4/hld.svg)

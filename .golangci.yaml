@@ -380,7 +380,6 @@ formatters:
 run:
   concurrency: 4
   timeout: 5m
-  go: "1.25"
   exclude-dirs:
     - .github
     - docs

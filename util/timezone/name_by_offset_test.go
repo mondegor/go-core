@@ -153,47 +153,62 @@ func TestLocationList_NameByOffset_FractionalDSTShift(t *testing.T) {
 }
 
 // TestLocationList_NameByOffset_PermanentDST - проверяет пояс, у которого признак
-// летнего времени стоит не там, где его ждёт зондирование в двух точках года.
+// летнего времени не означает "лето": в индекс должны попасть ровно те пары
+// (смещение, признак летнего времени), в которых пояс реально пребывает в течение
+// года, и не должны попасть пары с тем же смещением и противоположным признаком.
 //
-// Africa/Casablanca большую часть года живёт в +01, а в месяц Рамадана уходит
-// на +00. Признак летнего времени зависит от формата базы часовых поясов:
-//   - rearguard (системная база ряда дистрибутивов): +01 с признаком круглый год,
-//     +00 без признака;
-//   - основной (встроенная в Go time/tzdata, системная база Ubuntu): +01 без
-//     признака, +00 с признаком (отрицательное летнее время).
-//
-// Какой формат загрузится, решает окружение: time.LoadLocation сначала читает
-// системную базу, поэтому тест проверяет состояния того формата, что реально загружен.
+// Ожидаемые пары не захардкожены, а берутся из загруженной базы часовых поясов,
+// т.к. у Africa/Casablanca они зависят и от окружения, и от даты запуска:
+//   - time.LoadLocation сначала читает системную базу, а её формат разный:
+//     rearguard (+01 с признаком, +00 без него) или основной, как во встроенной
+//     в Go time/tzdata (+01 без признака, +00 с ним - отрицательное летнее время);
+//   - индекс строится на год вперёд от момента создания списка, а правила меняются:
+//     в tzdata 2026c Марокко с 2026-09-20 насовсем переходит на +00.
 func TestLocationList_NameByOffset_PermanentDST(t *testing.T) {
 	t.Parallel()
 
-	loc, err := time.LoadLocation("Africa/Casablanca")
+	const name = "Africa/Casablanca"
+
+	loc, err := time.LoadLocation(name)
 	require.NoError(t, err)
 
-	list := timezone.NewLocationList([]string{"Africa/Casablanca"})
+	list := timezone.NewLocationList([]string{name})
 
-	// в июле Рамадана нет, поэтому пояс находится в своём основном состоянии +01
-	isRearguard := time.Date(2026, time.July, 1, 12, 0, 0, 0, loc).IsDST()
-
-	if isRearguard {
-		// круглогодичное состояние пояса подбирается
-		assertZone(t, list, 1*time.Hour, true, "Africa/Casablanca")
-
-		// второе реальное состояние пояса, (+00, isDST=false), совпадает с парой UTC,
-		// а UTC регистрируется последним и потому выигрывает. Через NameByOffset это
-		// состояние ненаблюдаемо, проверяется лишь то, что пара разрешима
-		assertZone(t, list, 0, false, "UTC")
-	} else {
-		// оба реальных состояния пояса подбираются
-		assertZone(t, list, 1*time.Hour, false, "Africa/Casablanca")
-		assertZone(t, list, 0, true, "Africa/Casablanca")
+	// состояния пояса собираются тем же окном, по которому строится индекс:
+	// посуточно по полудню на год вперёд от текущего дня
+	type state struct {
+		offset time.Duration
+		isDST  bool
 	}
 
-	// состояния (+01) с противоположным признаком у пояса не существует,
-	// поэтому его в индексе быть не должно
-	got, ok := list.NameByOffset(1*time.Hour, !isRearguard)
-	assert.False(t, ok, "a state the zone is never in must not be registered")
-	assert.Empty(t, got)
+	states := make(map[state]struct{})
+	local := time.Now().In(loc)
+	start := time.Date(local.Year(), local.Month(), local.Day(), 12, 0, 0, 0, loc)
+
+	for day := start; day.Before(start.AddDate(1, 0, 0)); day = day.AddDate(0, 0, 1) {
+		_, offset := day.Zone()
+		states[state{offset: time.Duration(offset) * time.Second, isDST: day.IsDST()}] = struct{}{}
+	}
+
+	for s := range states {
+		// пару (+00, isDST=false) всегда получает UTC, т.к. регистрируется последним
+		want := name
+		if s.offset == 0 && !s.isDST {
+			want = "UTC"
+		}
+
+		assertZone(t, list, s.offset, s.isDST, want)
+
+		// пара с тем же смещением и противоположным признаком регистрируется,
+		// только если пояс в ней тоже бывает
+		if _, exists := states[state{offset: s.offset, isDST: !s.isDST}]; exists || s.offset == 0 {
+			continue
+		}
+
+		got, ok := list.NameByOffset(s.offset, !s.isDST)
+		assert.False(t, ok, "a state the zone is never in must not be registered (offset=%s, isDST=%v)", s.offset, !s.isDST)
+		assert.Empty(t, got)
+	}
 }
 
 // TestLocationList_NameByOffset_ZonesWithoutDST - проверяет, что для пояса

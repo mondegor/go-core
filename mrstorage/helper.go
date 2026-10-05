@@ -1,7 +1,12 @@
 package mrstorage
 
 import (
+	"math"
 	"strconv"
+)
+
+const (
+	maxLimit = math.MaxInt32 - 1 // верхний предел размера страницы (см. PageLimit)
 )
 
 // ToSQL - преобразует часть SQL-запроса в строку.
@@ -26,4 +31,18 @@ func NonZeroLimit(value int) string {
 	}
 
 	return " LIMIT " + strconv.Itoa(value)
+}
+
+// PageLimit - возвращает размер страницы в диапазоне [1, math.MaxInt32-1]:
+// верхний предел гарантирует, что Limit+1 (запрос лишней записи для hasNext) не переполняет int32.
+func PageLimit(value int) int {
+	if value < 1 {
+		return 1
+	}
+
+	if value > maxLimit {
+		return maxLimit
+	}
+
+	return value
 }

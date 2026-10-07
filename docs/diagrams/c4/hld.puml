@@ -26,7 +26,7 @@ Rel(wire_errors, errors, "Регистрирует опции создания �
 
 Rel(app, app_error_handler, "Передаёт ошибки (system и internal — с их персональным ID)")
 Rel(app_error_handler, errors, "Реализует интерфейс Handler, определяет итоговый вид ошибки (Kind)")
-Rel(wire_errors, app_error_handler, "Может предоставить реализацию по умолчанию (InitErrorHandler): логирование через mrlog")
+Rel(wire_errors, app_error_handler, "Может предоставить реализацию по умолчанию (InitErrorHandler)")
 Rel(app_error_handler, observability, "Логирует, трассирует ошибки и отправляет информацию о них")
 Rel(app, user, "Сообщает пользователю об ошибках с их персональным ID")
 

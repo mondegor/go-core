@@ -21,7 +21,6 @@
 !include components/c4/mrlog/logger.iuml
 
 ' ext
-!include components/c4/ext/observability.iuml
 !include components/c4/ext/user.iuml
 !include components/c4/ext/developer.iuml
 

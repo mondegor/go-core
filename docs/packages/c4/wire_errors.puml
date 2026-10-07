@@ -13,7 +13,7 @@ Boundary(wire_errors, "Хелперы-фабрики wire/errors") {
 !include components/c4/errors/id_generator.iuml
 !include components/c4/errors/stack_caller.iuml
 !include components/c4/errors/error_handler.iuml
-!include components/c4/mrlog/logger.iuml
+!include components/c4/ext/mrlog_logger.iuml
 
 Rel(init_errors, runtime_proto_error, "Регистрирует опции WithOnCreate: Hint с ID и стеком вызовов")
 Rel(init_errors, error_hint, "Создаёт Hint для экземпляра ошибки, если его нет в обёрнутой ошибке")

@@ -77,9 +77,9 @@ The package is built in layers, with a flat facade re-exporting the subpackages:
   `HandlerFunc`, and `NopHandler`. The library only provides this integration point — the application
   implements it and plugs in its own logging/tracing/monitoring.
 
-The intended flow (see README): each architectural layer defines its own errors and wraps caught
-errors as it propagates them up; the UseCase layer is the primary interception point that classifies
-the final kind and decides handling.
+The intended flow (see `errors/README.md`): each architectural layer defines its own errors and
+wraps caught errors as it propagates them up; the UseCase layer is the primary interception point
+that classifies the final kind and decides handling.
 
 ### Other packages
 
@@ -116,9 +116,9 @@ the final kind and decides handling.
   — the best starting point for understanding intended API usage.
 - `docs/` holds C4 architecture diagrams: PlantUML sources (`docs/packages/c4/errors.puml`,
   `wire_errors.puml`, `docs/diagrams/c4/hld.puml`, shared `.iuml` parts in `docs/components/c4/`) and
-  SVGs in `docs/resources/` referenced from README.md. SVGs are rendered by `make plantuml` and
+  SVGs in `docs/resources/` referenced from `errors/README.md`. SVGs are rendered by `make plantuml` and
   committed together with the sources.
-- `README.md` (Russian) has the authoritative explanation of the error-handling philosophy.
+- `errors/README.md` (Russian) has the authoritative explanation of the error-handling philosophy.
 
 ## Conventions
 

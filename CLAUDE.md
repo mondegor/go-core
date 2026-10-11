@@ -12,27 +12,37 @@ documentation and code comments are in Russian.
 
 ## Commands
 
-Day-to-day commands are wrappers around the external [`mrcmd`](https://github.com/mondegor/mrcmd)
-tool (`go-dev` plugin). Convenience `make` targets exist; use plain `go` when `mrcmd` is unavailable.
+Tooling is driven by [`mrcmd`](https://github.com/mondegor/mrcmd) with the `go-dev` plugin;
+`make` targets wrap it. When `mrcmd` is not installed, use the direct equivalents.
 
-- `make test` / `mrcmd go-dev test` — run all tests
-- `make test-report` / `mrcmd go-dev test-report` — tests + HTML coverage (`test-coverage-full.html`)
-- `make lint` — fmt (gofumpt), goimports, gci, then golangci-lint (`.golangci.yaml`); `mrcmd go-dev lint` runs only golangci-lint
-- `make generate` — run `go:generate` (gotext localization catalogs in `examples/mrlocale/dict/*`);
-  requires `gotext` and `gotext-catalog-fix` in `PATH` (`go install ./cmd/gotext-catalog-fix`)
-- `make plantuml` — render `.puml` diagrams under `docs/` to images
+| Task | make | mrcmd | Without mrcmd |
+|------|------|-------|---------------|
+| Download deps | `make deps` | `mrcmd go-dev deps` | `go get ./... && go mod tidy` |
+| Upgrade deps | `make deps-upgrade` | `mrcmd go-dev get -u ./...` + `mrcmd go-dev tidy` | `go get -u ./... && go mod tidy` |
+| Codegen (gotext catalogs, mocks) | `make generate` | `mrcmd go-dev generate` | `go generate ./...` |
+| Format + lint | `make lint` | `mrcmd go-dev fmt` + `mrcmd go-dev lint` | `golangci-lint fmt && golangci-lint run ./...` |
+| Format diff only | — | `mrcmd go-dev fmt-diff` | `golangci-lint fmt -d` |
+| Validate lint config | `make lint-verify` | `mrcmd go-dev lint-verify` | `golangci-lint config verify` (needs network access to golangci-lint.run; not part of CI) |
+| Run all tests | `make test` | `mrcmd go-dev test` | `go test -cover ./...` |
+| Coverage report (`test-coverage-full.html`) | `make test-report` | `mrcmd go-dev test-report` | — |
+| Diagrams from `.puml` (`docs/`) | `make plantuml` | `mrcmd plantuml build-all` | — |
 
-Without `mrcmd` installed:
-- All tests: `go test ./...`
+- `Makefile.mk` adds `make check-and-fix` (generate → format → lint → test → plantuml),
+  `make full` (deps + check-and-fix), `make full2` (deps-upgrade + check-and-fix) and `make archive`.
+- Formatters (gofmt, goimports, gci, gofumpt) and linters are both configured in `.golangci.yaml`;
+  `golangci-lint fmt` skips generated files.
+- Dev tools are installed via `mrcmd go-dev install-tools`: `golangci-lint` defaults to `latest`
+  (pin a version by uncommenting its `GO_DEV_TOOLS_INSTALL_*` in `.env`); `mockgen`
+  (`go.uber.org/mock`) and `gotext` are disabled in go-dev by default, their versions are set
+  in `.env.dist`.
+- `make generate` builds the gotext localization catalogs in `examples/mrlocale/dict/*` and requires
+  `gotext` and `gotext-catalog-fix` in `PATH` (`go install ./cmd/gotext-catalog-fix`).
 - Single package: `go test ./errors/runtime/`
 - Single test: `go test -run TestName ./errors/user/`
 - Benchmarks (several `compare_std_bench_test.go` files): `go test -bench=. ./errors/userfast/`
 
 `golangci-lint` runs with `default: all` and a curated disable list in `.golangci.yaml` — it is
-strict. Dev tools (`gofumpt`, `goimports`, `gci`, `golangci-lint`, `gotext`, ...) are installed via
-`mrcmd go-dev install-tools`. `gofumpt`, `goimports`, `gci`, `golangci-lint` default to `latest`
-(pin a version by uncommenting its `GO_DEV_TOOLS_INSTALL_*` in `.env`); `mockgen` and `gotext` are
-disabled in go-dev by default, their versions are set in `.env.dist`.
+strict.
 
 ## Architecture
 

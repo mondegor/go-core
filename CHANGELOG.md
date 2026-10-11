@@ -1,6 +1,29 @@
 # GoCore Changelog
 Все изменения библиотеки GoCore будут документироваться на этой странице.
 
+## 2026-10-11
+### Changed
+- Форматирование кода переведено на `golangci-lint fmt` (форматтеры и их настройки берутся
+  из раздела `formatters` в `.golangci.yaml`, сгенерированные файлы пропускаются):
+  `make lint` и `make check-and-fix` вызывают `mrcmd go-dev fmt` вместо `fmt`, `fmti`, `fmti2`;
+  для просмотра изменений без записи добавлена команда `mrcmd go-dev fmt-diff`;
+- Из `.env.dist` удалены переменные `GO_DEV_IMPORTS_LOCAL_PREFIXES` и
+  `GO_DEV_TOOLS_INSTALL_{GOFUMPT,GOIMPORTS,GCI}_VERSION`: утилиты `gofumpt`, `goimports`, `gci`
+  больше не нужны, локальный префикс imports задаётся только в `.golangci.yaml`;
+- В CI отключена проверка `.golangci.yaml` по JSON-схеме (`verify: false`), так как она
+  зависела от доступности golangci-lint.run; для ручной проверки добавлен `make lint-verify`;
+- CI запускается на pull request и на push в `master` (раньше — на push в любую ветку):
+  push в ветку без открытого PR больше не проверяется;
+- С mrcmd v0.6.5 `make` возвращает ненулевой код, если команда упала
+  (раньше ошибки mrcmd не передавались);
+- Обновлены зависимости: `golang.org/x/text` v0.42.0 → v0.43.0 (минимальная версия
+  для потребителей библиотеки), `golang.org/x/exp` до v0.0.0-20261011100332-faecfb24eb49,
+  `golang.org/x/sync` (indirect) v0.23.0 → v0.24.0;
+- `GO_DEV_TOOLS_INSTALL_GOTEXT_VERSION` в `.env.dist` поднят до v0.43.0 — под версию
+  `golang.org/x/text` в go.mod;
+- Требуются mrcmd v0.6.5 и mrcmd-plugins v0.14.9;
+- README и CLAUDE.md обновлены под новые команды;
+
 ## 2026-10-05
 ### Added
 - `util/xstrings.SanitizePrintable()` - приводит недоверенную строку (например, User-Agent)

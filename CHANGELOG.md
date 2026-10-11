@@ -5,13 +5,15 @@
 ### Changed
 - Форматирование кода переведено на `golangci-lint fmt` (форматтеры и их настройки берутся
   из раздела `formatters` в `.golangci.yaml`, сгенерированные файлы пропускаются):
-  `make lint` и `make check-and-fix` вызывают `mrcmd go-dev fmt` вместо `fmt`, `fmti`, `fmti2`;
+  `make lint` вызывает `mrcmd go-dev fmt` вместо `fmt`, `fmti`, `fmti2`;
   для просмотра изменений без записи добавлена команда `mrcmd go-dev fmt-diff`;
 - Из `.env.dist` удалены переменные `GO_DEV_IMPORTS_LOCAL_PREFIXES` и
   `GO_DEV_TOOLS_INSTALL_{GOFUMPT,GOIMPORTS,GCI}_VERSION`: утилиты `gofumpt`, `goimports`, `gci`
   больше не нужны, локальный префикс imports задаётся только в `.golangci.yaml`;
 - В CI отключена проверка `.golangci.yaml` по JSON-схеме (`verify: false`), так как она
   зависела от доступности golangci-lint.run; для ручной проверки добавлен `make lint-verify`;
+- В `.env.dist` закреплена версия `golangci-lint` v2.11.4 — та же, что в CI;
+  в уже созданном `.env` обновите `GO_DEV_TOOLS_INSTALL_GOLANGCI_LINT_VERSION` вручную;
 - CI запускается на pull request и на push в `master` (раньше — на push в любую ветку):
   push в ветку без открытого PR больше не проверяется;
 - С mrcmd v0.6.5 `make` возвращает ненулевой код, если команда упала

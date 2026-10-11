@@ -27,6 +27,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
+          # должна совпадать с GO_DEV_TOOLS_INSTALL_GOLANGCI_LINT_VERSION в .env.dist
           version: v2.11.4
           verify: false
 

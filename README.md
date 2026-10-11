@@ -25,8 +25,8 @@
 - `cp .env.dist .env`
 - `mrcmd go-dev deps` // загрузка зависимостей проекта
 - Для работы утилит `golangci-lint` (линтеры и форматтеры), `mockgen`, `gotext` необходимо запустить
-  `mrcmd go-dev install-tools`. По умолчанию `golangci-lint` устанавливается последней версии;
-  чтобы закрепить версию, раскомментируйте переменную `GO_DEV_TOOLS_INSTALL_*` в `.env`.
+  `mrcmd go-dev install-tools`. `golangci-lint` устанавливается версии из `.env.dist`
+  (совпадает с версией в CI, менять их нужно вместе).
   `mockgen` и `gotext` в go-dev по умолчанию выключены, их версии заданы в `.env.dist`;
 - `go install ./cmd/gotext-catalog-fix` // установка утилиты, используемой при генерации каталогов локализации
 
@@ -57,12 +57,6 @@
 - `make test` // аналог `mrcmd go-dev test`
 - `make test-report` // аналог `mrcmd go-dev test-report`
 - `make plantuml` // аналог `mrcmd plantuml build-all`
-
-Дополнительные команды (Makefile.mk):
-- `make check-and-fix` // generate + форматирование + lint + test + plantuml;
-- `make full` // `make deps` + `make check-and-fix`;
-- `make full2` // `make deps-upgrade` + `make check-and-fix`;
-- `make archive` // упаковывает проект в `../go-core.tar.gz`;
 
 > Чтобы расширить список команд, необходимо создать Makefile.mk и добавить
 > туда дополнительные команды, все они будут добавлены в единый список команд make утилиты.

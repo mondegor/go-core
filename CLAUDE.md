@@ -27,14 +27,12 @@ Tooling is driven by [`mrcmd`](https://github.com/mondegor/mrcmd) with the `go-d
 | Coverage report (`test-coverage-full.html`) | `make test-report` | `mrcmd go-dev test-report` | — |
 | Diagrams from `.puml` (`docs/`) | `make plantuml` | `mrcmd plantuml build-all` | — |
 
-- `Makefile.mk` adds `make check-and-fix` (generate → format → lint → test → plantuml),
-  `make full` (deps + check-and-fix), `make full2` (deps-upgrade + check-and-fix) and `make archive`.
+- Extra local make targets can be added in a gitignored `Makefile.mk` (included by `Makefile` if present).
 - Formatters (gofmt, goimports, gci, gofumpt) and linters are both configured in `.golangci.yaml`;
   `golangci-lint fmt` skips generated files.
-- Dev tools are installed via `mrcmd go-dev install-tools`: `golangci-lint` defaults to `latest`
-  (pin a version by uncommenting its `GO_DEV_TOOLS_INSTALL_*` in `.env`); `mockgen`
-  (`go.uber.org/mock`) and `gotext` are disabled in go-dev by default, their versions are set
-  in `.env.dist`.
+- Dev tools are installed via `mrcmd go-dev install-tools`: `golangci-lint` is pinned in `.env.dist`
+  to the version CI uses (bump both together); `mockgen` (`go.uber.org/mock`) and `gotext`
+  are disabled in go-dev by default, their versions are set in `.env.dist`.
 - `make generate` builds the gotext localization catalogs in `examples/mrlocale/dict/*` and requires
   `gotext` and `gotext-catalog-fix` in `PATH` (`go install ./cmd/gotext-catalog-fix`).
 - Single package: `go test ./errors/runtime/`

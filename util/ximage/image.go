@@ -76,5 +76,5 @@ func unsafeDecodeImage(file io.ReadSeeker, contentType string) (image.Image, err
 }
 
 func wrapError(err error) error {
-	return fmt.Errorf("mrlib/extfile: %w", err)
+	return fmt.Errorf("ximage: %w", err)
 }

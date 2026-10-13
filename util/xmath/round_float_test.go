@@ -85,3 +85,13 @@ func TestRoundFloatInf(t *testing.T) {
 	got = xmath.RoundFloat(math.Inf(-1), 2)
 	assert.True(t, math.IsInf(got, -1))
 }
+
+func TestRoundFloatN(t *testing.T) {
+	t.Parallel()
+
+	const x = 1.123456789
+
+	assert.InDelta(t, 1.12, xmath.RoundFloat2(x), 1e-12)
+	assert.InDelta(t, 1.1235, xmath.RoundFloat4(x), 1e-12)
+	assert.InDelta(t, 1.12345679, xmath.RoundFloat8(x), 1e-12)
+}

@@ -6,7 +6,7 @@ import (
 )
 
 // String - преобразует значение произвольного типа в строку.
-// Поддерживает: строки, целые числа, числа с плавающей точкой, bool, nil, error,
+// Поддерживает: строки, целые числа, числа с плавающей точкой, bool, nil ("<NIL>"), error,
 // fmt.Stringer и любые другие значения через fmt.Sprintf.
 func String(value any) string {
 	str, _ := toString(value)

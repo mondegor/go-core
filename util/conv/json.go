@@ -9,8 +9,8 @@ const (
 )
 
 // JSONValue - преобразует значение в строковое представление для JSON.
-// Строковые значения оборачиваются в двойные кавычки через strconv.Quote.
-// nil-значения преобразуются в "null".
+// Строки, error, fmt.Stringer и прочие нечисловые значения оборачиваются в кавычки
+// через strconv.Quote, nil преобразуется в null.
 func JSONValue(value any) string {
 	str, needQuote := toString(value)
 

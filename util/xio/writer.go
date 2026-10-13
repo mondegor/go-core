@@ -12,7 +12,7 @@ type (
 	}
 )
 
-// Write - адаптер для вызова io.Writer указанного объекта с логированием ошибки.
+// Write - записывает bytes в w, ошибка записи логируется. Пустые данные не пишутся.
 func Write(ctx context.Context, logger logger, w io.Writer, bytes []byte) {
 	if len(bytes) == 0 {
 		return

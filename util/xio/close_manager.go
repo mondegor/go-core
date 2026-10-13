@@ -7,8 +7,8 @@ import (
 )
 
 type (
-	// CloseManager - менеджер для одновременного
-	// закрытия всех зарегистрированных ресурсов.
+	// CloseManager - менеджер для закрытия всех зарегистрированных ресурсов.
+	// Не потокобезопасен: Register и Close вызываются из одной горутины.
 	CloseManager struct {
 		logger    logger
 		resources []io.Closer
@@ -30,7 +30,8 @@ func (m *CloseManager) Register(resource io.Closer) {
 	m.logger.Debug(context.Background(), fmt.Sprintf("Resource %T was registered", resource))
 }
 
-// Close - последовательно вызывается метод Close() для всех зарегистрированных ресурсов.
+// Close - закрывает ресурсы в порядке регистрации. Ошибка закрытия ресурса
+// логируется и не прерывает закрытие остальных.
 func (m *CloseManager) Close() {
 	for _, resource := range m.resources {
 		m.close(resource)

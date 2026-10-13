@@ -51,7 +51,7 @@ func SortedUniqueClone[T ordered](s []T) []T {
 	return SortedUnique(slices.Clone(s))
 }
 
-// BinaryIndex - возвращает индекс массива, где содержится указанный элемент массива.
+// BinaryIndex - возвращает индекс указанного элемента или -1, если его нет.
 // Указанный массив обязан быть предварительно отсортирован.
 func BinaryIndex[T ordered](s []T, value T) int {
 	i := binaryIndex(s, value)
@@ -69,7 +69,8 @@ func BinaryContains[T ordered](s []T, value T) bool {
 	return BinaryIndex(s, value) >= 0
 }
 
-// BinaryAppend - добавляет элемент в массив оставляя последний отсортированным.
+// BinaryAppend - добавляет элемент в массив, оставляя его отсортированным.
+// Как и append, может изменить исходный массив, поэтому используется результат.
 // Указанный массив обязан быть предварительно отсортирован.
 func BinaryAppend[T ordered](s []T, value T) []T {
 	return binaryAppend(s, value, false)

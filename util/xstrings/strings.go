@@ -16,7 +16,7 @@ func TrimBeforeSep(s string, sep byte) string {
 	return s
 }
 
-// SortedUnique - возвращает уникальный отсортированный массив элементов (не копию).
+// SortedUnique - сортирует s на месте и возвращает его же с удалёнными дубликатами (не копию).
 func SortedUnique(s []string) []string {
 	slices.Sort(s)
 

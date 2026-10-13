@@ -20,7 +20,8 @@ type (
 	}
 )
 
-// NewTypeList - создаёт объект TypeList на основе списка соответствий расширений и файлов.
+// NewTypeList - создаёт объект TypeList на основе списка соответствий расширений и типов файлов.
+// Точка в начале расширения отбрасывается.
 func NewTypeList(items []Type) *TypeList {
 	mimeMap := make(map[string]string, len(items))
 	extMap := make(map[string]string, len(items))
@@ -42,8 +43,8 @@ func NewTypeList(items []Type) *TypeList {
 	}
 }
 
-// TypesByExts - возвращает Type массив, в который войдут указанные расширения,
-// если хотя бы одно расширение не зарегистрировано в списке, то будет выдана ошибка.
+// TypesByExts - возвращает типы для указанных расширений (Extension сохраняется в переданном виде).
+// Если хотя бы одно расширение не зарегистрировано, возвращается ошибка.
 func (mt *TypeList) TypesByExts(values []string) ([]Type, error) {
 	mime := make([]Type, len(values))
 
@@ -62,8 +63,8 @@ func (mt *TypeList) TypesByExts(values []string) ([]Type, error) {
 	return mime, nil
 }
 
-// ContentTypeByExt - возвращает тип файла по указанному расширению,
-// если тип не найден, то возвращается пустая строка.
+// ContentTypeByExt - возвращает тип файла по расширению (допускается точка в начале).
+// Если тип не найден или расширение пустое, возвращается ошибка.
 func (mt *TypeList) ContentTypeByExt(value string) (string, error) {
 	if value == "" || len(value) == 1 && value[0] == '.' {
 		return "", errors.New("arg 'value' is empty")
@@ -80,8 +81,8 @@ func (mt *TypeList) ContentTypeByExt(value string) (string, error) {
 	return "", fmt.Errorf("mime not found for arg '%s'", value)
 }
 
-// ExtByContentType - возвращает расширение по указанному типу файла,
-// если расширение не найдено, то возвращается пустая строка.
+// ExtByContentType - возвращает расширение по типу файла (первое из зарегистрированных для этого типа).
+// Если расширение не найдено или тип пустой, возвращается ошибка.
 func (mt *TypeList) ExtByContentType(value string) (string, error) {
 	if value == "" {
 		return "", errors.New("arg 'value' is empty")

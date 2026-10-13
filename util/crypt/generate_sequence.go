@@ -36,8 +36,10 @@ func GenerateToken(length int) (string, error) {
 
 // GenerateSequence - генерирует криптографически случайную последовательность из указанного набора ASCII-символов.
 // Параметры:
-//   - charset - набор допустимых символов (максимум 128);
+//   - charset - набор допустимых символов (от 1 до 128);
 //   - length - длина результата (минимум 1).
+//
+// Подробности в GenerateBytes.
 func GenerateSequence(charset []byte, length int) (string, error) {
 	s, err := GenerateBytes(charset, length)
 	if err != nil {
@@ -48,10 +50,15 @@ func GenerateSequence(charset []byte, length int) (string, error) {
 }
 
 // GenerateBytes - генерирует криптографически случайный слайс байтов из указанного набора символов.
+// Символы выбираются равновероятно: случайные байты, выходящие за пределы charset, отбрасываются.
 // Параметры:
-//   - charset - набор допустимых символов (максимум 128);
+//   - charset - набор допустимых символов (от 1 до 128);
 //   - length - длина результата (минимум 1).
 func GenerateBytes(charset []byte, length int) ([]byte, error) {
+	if len(charset) == 0 {
+		return nil, errors.New("charset is empty")
+	}
+
 	if len(charset) > maxCharsetLen {
 		return nil, errors.New("charset length exceeds max length")
 	}

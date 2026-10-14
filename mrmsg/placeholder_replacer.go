@@ -12,8 +12,8 @@ const (
 )
 
 type (
-	// PlaceholderReplacer - замена именованных плейсхолдеров в сообщении через strings.Replacer.
-	// Плейсхолдеры заменяются на строковые представления аргументов по порядку.
+	// PlaceholderReplacer - заменяет именованные плейсхолдеры в сообщении на аргументы
+	// по порядку через strings.Replacer.
 	PlaceholderReplacer struct {
 		message      string
 		placeholders []string
@@ -23,7 +23,7 @@ type (
 // NewPlaceholderReplacer - создаёт PlaceholderReplacer для замены плейсхолдеров.
 // Параметры:
 //   - message - сообщение с именованными плейсхолдерами (например: "Hello {name}, you are {age}");
-//   - placeholders - список плейсхолдеров для замены в порядке их появления.
+//   - placeholders - уникальные плейсхолдеры вместе с ограничителями в порядке аргументов.
 func NewPlaceholderReplacer(message string, placeholders []string) *PlaceholderReplacer {
 	return &PlaceholderReplacer{
 		message:      message,
@@ -43,18 +43,17 @@ func NewMessageReplacer(leftDelim, rightDelim, message string) *PlaceholderRepla
 }
 
 // Replace - подставляет аргументы в подготовленное сообщение, заменяя плейсхолдеры.
-// Аргументы преобразуются в строки через conv.String.
-// Если аргументов меньше, чем плейсхолдеров, недостающие заменяются на "!MISSINGARG".
+// Аргументы преобразуются в строки через conv.String и сопоставляются плейсхолдерам по порядку.
+// Если плейсхолдеров нет, сообщение возвращается как есть.
+// Недостающие аргументы заменяются на "!MISSINGARG", лишние игнорируются.
 func (p *PlaceholderReplacer) Replace(args []any) (replacedMessage string, err error) {
-	if p.message == "" {
-		return "", nil
+	var buf strings.Builder
+
+	if err = p.ReplaceTo(&buf, args); err != nil {
+		return "", err
 	}
 
-	if len(p.placeholders) == 0 {
-		return p.message, nil
-	}
-
-	return strings.NewReplacer(p.merge(args)...).Replace(p.message), nil
+	return buf.String(), nil
 }
 
 // ReplaceTo - записывает сообщение с подставленными аргументами в io.Writer.
@@ -65,12 +64,12 @@ func (p *PlaceholderReplacer) ReplaceTo(wr io.Writer, args []any) error {
 	}
 
 	if len(p.placeholders) == 0 {
-		_, err := wr.Write([]byte(p.message))
+		_, err := io.WriteString(wr, p.message)
 
 		return err //nolint:wrapcheck
 	}
 
-	_, err := wr.Write([]byte(strings.NewReplacer(p.merge(args)...).Replace(p.message)))
+	_, err := strings.NewReplacer(p.merge(args)...).WriteString(wr, p.message)
 
 	return err //nolint:wrapcheck
 }
@@ -83,24 +82,14 @@ func (p *PlaceholderReplacer) CountArgs() int {
 func (p *PlaceholderReplacer) merge(args []any) (keyValues []string) {
 	keyValues = make([]string, 0, len(p.placeholders)*2)
 
-	if len(args) >= len(p.placeholders) {
-		for i := range p.placeholders {
-			keyValues = append(keyValues, p.placeholders[i], conv.String(args[i]))
+	for i, placeholder := range p.placeholders {
+		value := missingArg
+
+		if i < len(args) {
+			value = conv.String(args[i])
 		}
 
-		return keyValues
-	}
-
-	i := 0
-
-	// len(p.placeholders) > len(args)
-	for range args {
-		keyValues = append(keyValues, p.placeholders[i], conv.String(args[i]))
-		i++
-	}
-
-	for j := i; j < len(p.placeholders); j++ {
-		keyValues = append(keyValues, p.placeholders[j], missingArg)
+		keyValues = append(keyValues, placeholder, value)
 	}
 
 	return keyValues

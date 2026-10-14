@@ -1,6 +1,7 @@
 package mrmsg_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -81,4 +82,77 @@ func Test_NewMessageReplacer(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestPlaceholderReplacer_Replace(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		name         string
+		message      string
+		placeholders []string
+		args         []any
+		want         string
+	}
+
+	tests := []testCase{
+		{
+			name:    "without placeholders: message as is",
+			message: "message {Arg1}",
+			args:    []any{"value1"},
+			want:    "message {Arg1}",
+		},
+		{
+			name:         "extra args are ignored",
+			message:      "message {Arg1}",
+			placeholders: []string{"{Arg1}"},
+			args:         []any{1, 2},
+			want:         "message 1",
+		},
+		{
+			name:         "repeated placeholder",
+			message:      "{Arg1} and {Arg1}",
+			placeholders: []string{"{Arg1}"},
+			args:         []any{nil},
+			want:         "<NIL> and <NIL>",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			replacer := mrmsg.NewPlaceholderReplacer(tt.message, tt.placeholders)
+
+			got, err := replacer.Replace(tt.args)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+
+			var buf strings.Builder
+
+			require.NoError(t, replacer.ReplaceTo(&buf, tt.args))
+			assert.Equal(t, tt.want, buf.String())
+		})
+	}
+}
+
+func TestPlaceholderReplacer_ReplaceTo(t *testing.T) {
+	t.Parallel()
+
+	var buf strings.Builder
+
+	replacer := mrmsg.NewMessageReplacer("", "", "{A} {B}")
+
+	require.NoError(t, replacer.ReplaceTo(&buf, []any{1}))
+	assert.Equal(t, "1 !MISSINGARG", buf.String())
+
+	require.ErrorIs(t, replacer.ReplaceTo(failWriter{}, nil), errWrite)
+	require.ErrorIs(t, mrmsg.NewPlaceholderReplacer("message", nil).ReplaceTo(failWriter{}, nil), errWrite)
+	require.NoError(t, mrmsg.NewPlaceholderReplacer("", nil).ReplaceTo(failWriter{}, nil))
+}
+
+func TestPlaceholderReplacer_CountArgs(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, 0, mrmsg.NewMessageReplacer("{", "}", "message").CountArgs())
+	assert.Equal(t, 2, mrmsg.NewMessageReplacer("{", "}", "{A} {B} {A}").CountArgs())
 }

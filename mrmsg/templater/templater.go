@@ -70,7 +70,7 @@ func NewTemplater(leftDelim, rightDelim string, opts ...Option) *Templater {
 // Render - формирует сообщение из шаблона, подставляя параметры из data.
 // Параметры:
 //   - message - шаблон с синтаксисом Go-шаблонов;
-//   - data - карта имён параметров и их строковых значений;
+//   - data - карта имён параметров и их строковых значений.
 func (p *Templater) Render(message string, data map[string]string) (string, error) {
 	var buf strings.Builder
 
@@ -84,7 +84,7 @@ func (p *Templater) Render(message string, data map[string]string) (string, erro
 // RenderTo - записывает сформированное сообщение из шаблона в io.Writer.
 // Параметры:
 //   - message - шаблон с синтаксисом Go-шаблонов;
-//   - data - карта имён параметров и их строковых значений;
+//   - data - карта имён параметров и их строковых значений.
 //
 // Если сообщение не содержит ограничителей, записывается как есть без парсинга.
 // Отсутствующие в data параметры выводятся пустой строкой.

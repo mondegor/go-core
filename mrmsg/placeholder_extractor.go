@@ -13,8 +13,8 @@ const (
 
 type (
 	// PlaceholderExtractor - извлекает именованные плейсхолдеры из текста сообщения.
-	// Плейсхолдер должен соответствовать формату: {Name}, где Name начинается с буквы
-	// и содержит только буквы и цифры.
+	// Плейсхолдер - имя между ограничителями (например: {Name}), начинающееся с латинской
+	// буквы и содержащее только латинские буквы и цифры.
 	PlaceholderExtractor struct {
 		leftDelim  string
 		rightDelim string
@@ -40,10 +40,8 @@ func NewPlaceholderExtractor(leftDelim, rightDelim string) *PlaceholderExtractor
 	}
 }
 
-// Extract - извлекает все уникальные плейсхолдеры из сообщения.
-// Плейсхолдер валидируется: тело должно соответствовать ^[A-Za-z][A-Za-z0-9]*$.
-// Возвращает nil, если плейсхолдеры не найдены или невалидны.
-// Плейсхолдеры возвращаются в порядке первого появления, дубликаты пропускаются.
+// Extract - возвращает уникальные плейсхолдеры (вместе с ограничителями) в порядке
+// первого появления. Невалидные пропускаются, если валидных нет - возвращается nil.
 func (p *PlaceholderExtractor) Extract(message string) (placeholders []string) {
 	n := strings.Count(message, p.leftDelim)
 
@@ -82,7 +80,7 @@ func (p *PlaceholderExtractor) Extract(message string) (placeholders []string) {
 
 		message = message[pos2+len(p.rightDelim):]
 
-		if p.placeholderIn(placeholder, placeholders) {
+		if slices.Contains(placeholders, placeholder) {
 			continue
 		}
 
@@ -96,14 +94,4 @@ func (p *PlaceholderExtractor) Extract(message string) (placeholders []string) {
 	}
 
 	return slices.Clip(placeholders)
-}
-
-func (p *PlaceholderExtractor) placeholderIn(placeholder string, placeholders []string) bool {
-	for i := 0; i < len(placeholders); i++ {
-		if placeholder == placeholders[i] {
-			return true
-		}
-	}
-
-	return false
 }

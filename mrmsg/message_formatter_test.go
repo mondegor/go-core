@@ -71,3 +71,11 @@ func Test_NewMessageFormatter(t *testing.T) {
 		})
 	}
 }
+
+func TestMessageFormatter_FormatWithoutFormatter(t *testing.T) {
+	t.Parallel()
+
+	message, placeholders := mrmsg.NewMessageFormatter("{", "}", nil).Format("message {A}")
+	assert.Equal(t, "message {A}", message)
+	assert.Equal(t, []string{"{A}"}, placeholders)
+}

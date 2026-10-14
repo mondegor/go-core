@@ -1,6 +1,7 @@
 package templater_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -118,6 +119,12 @@ func TestTemplater_Render(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:    "text mode: execution error",
+			message: "{{index .Name 10}}",
+			data:    map[string]string{"Name": "abc"},
+			wantErr: true,
+		},
+		{
 			name:    "html mode: invalid template",
 			opts:    []templater.Option{templater.WithMode(templater.ModeHTML)},
 			message: "hello {{.Name",
@@ -149,4 +156,24 @@ func TestTemplater_Render(t *testing.T) {
 			assert.Equal(t, tt.want, buf.String())
 		})
 	}
+}
+
+func TestTemplater_RenderToWriteError(t *testing.T) {
+	t.Parallel()
+
+	tpl := templater.NewTemplater("", "")
+
+	require.ErrorIs(t, tpl.RenderTo(failWriter{}, "plain message", nil), errWrite)
+	require.ErrorIs(t, tpl.RenderTo(failWriter{}, "{{.Name}}", map[string]string{"Name": "value"}), errWrite)
+}
+
+type (
+	// failWriter - писатель, всегда возвращающий ошибку.
+	failWriter struct{}
+)
+
+var errWrite = errors.New("write failed")
+
+func (failWriter) Write([]byte) (int, error) {
+	return 0, errWrite
 }

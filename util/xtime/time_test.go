@@ -18,12 +18,13 @@ func TestTimeLeftInSec(t *testing.T) {
 		want   int64
 	}
 
-	// смещения выбраны вдали от границ округления, чтобы время выполнения теста не влияло на результат
+	// смещения выбраны вдали от целых секунд, чтобы время выполнения теста не влияло на результат
 	tests := []testCase{
 		{name: "past", offset: -time.Hour, want: 0},
-		{name: "less than half second ago", offset: -200 * time.Millisecond, want: 0},
-		{name: "rounded down", offset: 10*time.Second + 200*time.Millisecond, want: 10},
-		{name: "rounded up", offset: 10*time.Second + 800*time.Millisecond, want: 11},
+		{name: "recently passed", offset: -200 * time.Millisecond, want: 0},
+		{name: "less than second left", offset: 200 * time.Millisecond, want: 1},
+		{name: "small fraction rounded up", offset: 10*time.Second + 200*time.Millisecond, want: 11},
+		{name: "large fraction rounded up", offset: 10*time.Second + 800*time.Millisecond, want: 11},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

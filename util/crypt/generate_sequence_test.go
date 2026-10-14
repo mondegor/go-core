@@ -3,7 +3,6 @@ package crypt_test
 import (
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,7 +23,7 @@ func TestGenerateSequence(t *testing.T) {
 		{name: "one char", charset: "a", length: 10},
 		{name: "power of two", charset: "01234567", length: 100},
 		{name: "not power of two", charset: "abc", length: 100},
-		{name: "max charset", charset: strings.Repeat("x", 128), length: 10},
+		{name: "max charset", charset: maxCharset(), length: 100},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -41,7 +40,10 @@ func TestGenerateSequence(t *testing.T) {
 func TestGenerateSequenceErrors(t *testing.T) {
 	t.Parallel()
 
-	_, err := crypt.GenerateSequence([]byte(strings.Repeat("x", 129)), 1)
+	_, err := crypt.GenerateSequence(nil, 1)
+	require.Error(t, err)
+
+	_, err = crypt.GenerateSequence([]byte(strings.Repeat("x", 129)), 1)
 	require.Error(t, err)
 
 	_, err = crypt.GenerateSequence([]byte("abc"), 0)
@@ -77,28 +79,21 @@ func TestGenerateDigitsHexToken(t *testing.T) {
 	assertCharset(t, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", token)
 }
 
+// maxCharset - возвращает набор из 128 различных символов (все ASCII).
+func maxCharset() string {
+	charset := make([]byte, 128)
+
+	for i := range charset {
+		charset[i] = byte(i)
+	}
+
+	return string(charset)
+}
+
 func assertCharset(t *testing.T, charset, got string) {
 	t.Helper()
 
 	for _, c := range got {
 		assert.Contains(t, charset, string(c))
-	}
-}
-
-func TestGenerateSequenceEmptyCharset(t *testing.T) {
-	t.Parallel()
-
-	done := make(chan error, 1)
-
-	go func() {
-		_, err := crypt.GenerateSequence(nil, 1)
-		done <- err
-	}()
-
-	select {
-	case err := <-done:
-		require.Error(t, err)
-	case <-time.After(time.Second):
-		t.Fatal("GenerateSequence hangs on empty charset")
 	}
 }

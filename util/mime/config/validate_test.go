@@ -40,6 +40,19 @@ func TestValidateMimeTypes(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "duplicate extension with dot",
+			mimeTypes: []mime.Type{
+				{ContentType: "image/jpeg", Extension: "jpg"},
+				{ContentType: "image/pjpeg", Extension: ".jpg"},
+			},
+			wantErr: true,
+		},
+		{
+			name:      "dot only extension",
+			mimeTypes: []mime.Type{{ContentType: "image/jpeg", Extension: "."}},
+			wantErr:   true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

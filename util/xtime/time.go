@@ -5,18 +5,15 @@ import (
 )
 
 // TimeLeftInSec - возвращает количество секунд, оставшихся до указанного времени,
-// округлённое до ближайшей целой секунды. Для прошедшего времени возвращается 0.
+// округлённое в большую сторону. Для наступившего или прошедшего времени возвращается 0.
 func TimeLeftInSec(tm time.Time) int64 {
-	const (
-		second     = 1e9
-		halfSecond = second / 2
-	)
+	const second = int64(time.Second)
 
-	rest := tm.UnixNano() - time.Now().UnixNano() + halfSecond
+	rest := tm.UnixNano() - time.Now().UnixNano()
 
-	if rest < 0 {
+	if rest <= 0 {
 		return 0
 	}
 
-	return rest / second
+	return (rest + second - 1) / second
 }

@@ -28,11 +28,11 @@ func TestWrite(t *testing.T) {
 
 	xio.Write(context.Background(), logger, &buf, []byte("data"))
 	assert.Equal(t, "data", buf.String())
-	assert.Empty(t, logger.levels())
+	assert.Empty(t, logger.levels)
 
 	xio.Write(context.Background(), logger, failWriter{}, nil) // пустые данные не пишутся
-	assert.Empty(t, logger.levels())
+	assert.Empty(t, logger.levels)
 
 	xio.Write(context.Background(), logger, failWriter{}, []byte("data"))
-	assert.Equal(t, []string{"error"}, logger.levels())
+	assert.Equal(t, []string{"error"}, logger.levels)
 }

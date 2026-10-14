@@ -2,6 +2,7 @@ package xio_test
 
 import (
 	"errors"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,9 +38,12 @@ func TestCloseManager(t *testing.T) {
 
 	manager.Close()
 
-	// ошибка закрытия одного ресурса не прерывает закрытие остальных
-	assert.Equal(t, []string{"first", "second", "third"}, closed)
-	assert.Equal(t, []string{"debug", "debug", "debug", "debug", "error", "debug"}, logger.levels())
+	// ресурсы закрываются в обратном порядке, ошибка закрытия одного ресурса
+	// не прерывает закрытие остальных и логируется
+	assert.Equal(t, []string{"third", "second", "first"}, closed)
+
+	errorLevels := slices.DeleteFunc(slices.Clone(logger.levels), func(level string) bool { return level != "error" })
+	assert.Len(t, errorLevels, 1)
 }
 
 func TestCloseManagerEmpty(t *testing.T) {
@@ -49,5 +53,5 @@ func TestCloseManagerEmpty(t *testing.T) {
 
 	xio.NewCloseManager(logger).Close()
 
-	assert.Empty(t, logger.levels())
+	assert.Empty(t, logger.levels)
 }

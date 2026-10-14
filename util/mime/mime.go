@@ -43,7 +43,7 @@ func NewTypeList(items []Type) *TypeList {
 	}
 }
 
-// TypesByExts - возвращает типы для указанных расширений (Extension сохраняется в переданном виде).
+// TypesByExts - возвращает типы для указанных расширений (точка в начале расширения отбрасывается).
 // Если хотя бы одно расширение не зарегистрировано, возвращается ошибка.
 func (mt *TypeList) TypesByExts(values []string) ([]Type, error) {
 	mime := make([]Type, len(values))
@@ -56,7 +56,7 @@ func (mt *TypeList) TypesByExts(values []string) ([]Type, error) {
 
 		mime[i] = Type{
 			ContentType: contentType,
-			Extension:   ext,
+			Extension:   strings.TrimPrefix(ext, "."),
 		}
 	}
 
@@ -64,7 +64,7 @@ func (mt *TypeList) TypesByExts(values []string) ([]Type, error) {
 }
 
 // ContentTypeByExt - возвращает тип файла по расширению (допускается точка в начале).
-// Если тип не найден или расширение пустое, возвращается ошибка.
+// Сравнение чувствительно к регистру. Если тип не найден или расширение пустое, возвращается ошибка.
 func (mt *TypeList) ContentTypeByExt(value string) (string, error) {
 	if value == "" || len(value) == 1 && value[0] == '.' {
 		return "", errors.New("arg 'value' is empty")
@@ -74,22 +74,22 @@ func (mt *TypeList) ContentTypeByExt(value string) (string, error) {
 		value = value[1:]
 	}
 
-	if ext, ok := mt.extensionMap[value]; ok {
-		return ext, nil
+	if contentType, ok := mt.extensionMap[value]; ok {
+		return contentType, nil
 	}
 
 	return "", fmt.Errorf("mime not found for arg '%s'", value)
 }
 
 // ExtByContentType - возвращает расширение по типу файла (первое из зарегистрированных для этого типа).
-// Если расширение не найдено или тип пустой, возвращается ошибка.
+// Сравнение чувствительно к регистру. Если расширение не найдено или тип пустой, возвращается ошибка.
 func (mt *TypeList) ExtByContentType(value string) (string, error) {
 	if value == "" {
 		return "", errors.New("arg 'value' is empty")
 	}
 
-	if contentType, ok := mt.contentTypeMap[value]; ok {
-		return contentType, nil
+	if ext, ok := mt.contentTypeMap[value]; ok {
+		return ext, nil
 	}
 
 	return "", fmt.Errorf("ext not found for arg '%s'", value)

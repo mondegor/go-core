@@ -82,7 +82,7 @@ func TestTypeList_TypesByExts(t *testing.T) {
 		t,
 		[]mime.Type{
 			{ContentType: "image/png", Extension: "png"},
-			{ContentType: "image/jpeg", Extension: ".jpeg"},
+			{ContentType: "image/jpeg", Extension: "jpeg"},
 		},
 		got,
 	)

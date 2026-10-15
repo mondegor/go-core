@@ -5,29 +5,28 @@ import (
 )
 
 type (
-	// tailBuilder - построитель путей путём добавления переданного значения в конец базового пути.
+	// tailBuilder - добавляет значение в конец базового пути.
 	tailBuilder struct {
 		basePath string
 	}
 )
 
 // NewTail - создаёт Builder, который добавляет переданный путь в конец basePath.
-// Параметр basePath - базовый путь, к которому будет добавляться значение (например: "/base/dir/").
-// Нормализует trailing slash: убирает все завершающие "/" и добавляет одну.
-// Пример: basePath="/base/dir/" → "/base/dir/path".
+// Завершающие "/" в basePath сводятся к одному, но не добавляются.
+// Пример: NewTail("/dir/").BuildPath("x") → "/dir/x", NewTail("/dir-").BuildPath("x") → "/dir-x".
 func NewTail(basePath string) Builder {
 	return &tailBuilder{
-		basePath: strings.TrimRight(basePath, "/") + "/",
+		basePath: collapseTrailingSlashes(basePath),
 	}
 }
 
-// BuildPath - добавляет указанный путь в конец базового пути.
-// Убирает ведущий "/" из path для корректной склейки.
-// Возвращает пустую строку, если path пуст.
+// BuildPath - добавляет path без ведущих "/" в конец базового пути (завершающие "/" сохраняются).
+// Возвращает пустую строку, если path пуст или состоит только из "/".
 func (p *tailBuilder) BuildPath(path string) string {
+	path = strings.TrimLeft(path, "/")
 	if path == "" {
 		return ""
 	}
 
-	return p.basePath + strings.TrimLeft(path, "/")
+	return p.basePath + path
 }

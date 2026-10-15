@@ -1,6 +1,25 @@
 # GoCore Changelog
 Все изменения библиотеки GoCore будут документироваться на этой странице.
 
+## 2026-10-15
+### Added
+- `mrpath.NewPlaceholderPath()` - создаёт `Builder` со стандартным плейсхолдером `{{path}}`;
+
+### Changed
+- `mrpath.NewTail()` больше не добавляет "/" в конец `basePath`, а только сводит несколько
+  завершающих "/" к одному: `NewTail("/dir").BuildPath("x")` теперь даёт `"/dirx"`, а не `"/dir/x"`;
+- `mrpath.NewPlaceholder()`: несколько "/" на стыках с плейсхолдером сводятся к одному;
+  если плейсхолдер стоит в конце шаблона, завершающие "/" значения сохраняются (как в `NewTail`);
+
+### Removed
+- Константа `mrpath.Placeholder`, вместо `NewPlaceholder(basePath, mrpath.Placeholder)`
+  используйте `NewPlaceholderPath(basePath)`;
+
+### Fixed
+- `mrpath.NewPlaceholder()` возвращал ошибку «placeholder is not found», если плейсхолдер
+  стоял в начале шаблона;
+- `mrpath.NewTail()` сводил "/" схемы URL в `basePath` (`"https://"` → `"https:/"`);
+
 ## 2026-10-11
 ### Changed
 - Форматирование кода переведено на `golangci-lint fmt` (форматтеры и их настройки берутся

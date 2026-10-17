@@ -12,10 +12,11 @@ import (
 )
 
 type (
-	// LoggerAdapter - адаптер логгера на основе slog.Logger.
-	// Используется как резервный логгер, когда основной логгер
-	// не был установлен в контексте, или для автономного логирования.
-	// Поддерживает цветной вывод, JSON-формат и middleware.
+	// LoggerAdapter - реализация mrlog.Logger на основе slog.Logger.
+	// Поддерживает цветной, текстовый и JSON-вывод, а также middleware.
+	// Значения args передаются в slog.Logger без изменений, поэтому для отложенных
+	// вычислений, помимо fmt.Stringer и encoding.TextMarshaler, поддерживается slog.LogValuer
+	// (раскрывается до ReplaceAttr). Цветной вывод форматирует значения через fmt.
 	LoggerAdapter struct {
 		sl *stdlog.Logger
 	}
@@ -28,7 +29,8 @@ type (
 )
 
 // NewLoggerAdapter - создаёт LoggerAdapter с заданными параметрами.
-// При включенном colorMode и jsonFormat=true приоритет у JSON.
+// По умолчанию: уровень DEBUG, цветной вывод в os.Stdout, время в RFC3339 и UTC.
+// При включённых colorMode и jsonFormat приоритет у JSON.
 func NewLoggerAdapter(opts ...Option) (logger *LoggerAdapter, err error) {
 	o := options{
 		levelString: level.Debug.String(),
@@ -118,14 +120,14 @@ func (l *LoggerAdapter) WithAttributes(attrs ...any) *LoggerAdapter {
 	return &c
 }
 
-// WithAttrs - cм. WithAttributes.
+// WithAttrs - см. WithAttributes.
 func (l *LoggerAdapter) WithAttrs(attrs ...any) mrlog.Logger {
 	return l.WithAttributes(attrs...)
 }
 
-// Enabled - информирует включён ли указанный уровень логирования.
-func (l *LoggerAdapter) Enabled(lvl level.Enum) bool {
-	return l.sl.Enabled(context.Background(), stdlog.Level(lvl))
+// Enabled - сообщает, включён ли указанный уровень логирования для ctx (как в slog.Logger).
+func (l *LoggerAdapter) Enabled(ctx context.Context, lvl level.Enum) bool {
+	return l.sl.Enabled(ctx, stdlog.Level(lvl))
 }
 
 // Log - логирует сообщения на указанном уровне.
@@ -138,11 +140,11 @@ func (l *LoggerAdapter) Debug(ctx context.Context, msg string, args ...any) {
 	l.sl.DebugContext(ctx, msg, args...)
 }
 
-// DebugFunc - логирует сообщения на уровне level.Debug с их отложенным созданием.
-// Применяется для того, чтобы исключить формирование в продуктовой среде больших отладочных
-// сообщений с использованием многочисленных параметров.
+// DebugFunc - логирует сообщения на уровне level.Debug с их отложенным созданием:
+// createMsg вызывается, только если обработчик включает level.Debug для ctx
+// (уровень проверяется с контекстом вызова, как в slog.Logger).
 func (l *LoggerAdapter) DebugFunc(ctx context.Context, createMsg func() string, args ...any) {
-	if !l.Enabled(level.Debug) {
+	if !l.Enabled(ctx, level.Debug) {
 		return
 	}
 
@@ -164,7 +166,7 @@ func (l *LoggerAdapter) Error(ctx context.Context, msg string, args ...any) {
 	l.sl.ErrorContext(ctx, msg, args...)
 }
 
-// Trace - логирует сообщения на уровне level.Trace.
+// Trace - логирует запись с сообщением "trace" и атрибутами args на уровне level.Trace.
 func (l *LoggerAdapter) Trace(ctx context.Context, args ...any) {
 	l.sl.Log(ctx, stdlog.Level(level.Trace), "trace", args...)
 }

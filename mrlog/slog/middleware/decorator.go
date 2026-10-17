@@ -20,8 +20,8 @@ func (d *decorator) Enabled(ctx context.Context, level slog.Level) bool {
 	return d.handler.Enabled(ctx, level)
 }
 
-// Handle - реализация метода для интерфейса slog.Handler.
-// Перед вызовом метода Handle происходит модификация объекта slog.Record.
+// Handle - реализация метода для интерфейса slog.Handler:
+// передаёт в обработчик запись, изменённую beforeHandle.
 func (d *decorator) Handle(ctx context.Context, record slog.Record) error {
 	if err := d.handler.Handle(ctx, d.beforeHandle(ctx, record)); err != nil {
 		return fmt.Errorf("middleware.decorator.Handle error: %w", err)

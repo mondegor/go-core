@@ -12,7 +12,7 @@ type (
 
 // Перечисление уровней логирования.
 const (
-	Debug = Enum(slog.LevelDebug)     // Warn + Warn + Info - отладочные сообщения
+	Debug = Enum(slog.LevelDebug)     // Error + Warn + Info + отладочные сообщения
 	Info  = Enum(slog.LevelInfo)      // Error + Warn + информационные сообщения
 	Warn  = Enum(slog.LevelWarn)      // Error + предупреждения
 	Error = Enum(slog.LevelError)     // ошибки (максимальный уровень, который можно назначить в конфиге)

@@ -4,7 +4,8 @@ import (
 	stdlog "log"
 )
 
-// Fatal is equivalent to [Print] followed by a call to [os.Exit](1).
+// Fatal - замена log.Fatal: если первые аргументы - Logger и строка-сообщение,
+// логирует через FatalError (остальные аргументы - атрибуты), иначе вызывает log.Fatal(v...).
 func Fatal(v ...any) {
 	if l, msg, ok := extractLogger(v); ok {
 		FatalError(l, msg, v[2:]...) // stop if success

@@ -1,6 +1,20 @@
 # GoCore Changelog
 Все изменения библиотеки GoCore будут документироваться на этой странице.
 
+## 2026-10-16
+### Changed
+- `mrlog.Enabled()`, `mrlog.DebugEnabled()`, `mrlog.InfoEnabled()`: из документации убрано обещание
+  возвращать `false` для nil-логгера (фактически они паниковали); nil-логгер - ошибка вызывающего,
+  как и в `log/slog`, вместо него используется `mrlog.NopLogger()`;
+- `slog.LoggerAdapter.Enabled()` принимает контекст: `Enabled(ctx, lvl)`, как `slog.Logger.Enabled`;
+  опциональный метод, который ищет `mrlog.Enabled()`, теперь `Enabled(ctx context.Context, lvl level.Enum) bool`
+  (функции пакета передают `context.Background()`); собственные логгеры со старой сигнатурой `Enabled(lvl)`
+  больше не распознаются (предупреждение и `false`);
+
+### Fixed
+- `slog.LoggerAdapter.DebugFunc()` проверял уровень с `context.Background()` вместо `ctx` вызова,
+  из-за чего обработчик, включающий level.Debug по контексту, терял сообщение;
+
 ## 2026-10-15
 ### Added
 - `mrpath.NewPlaceholderPath()` - создаёт `Builder` со стандартным плейсхолдером `{{path}}`;
@@ -10,6 +24,7 @@
   завершающих "/" к одному: `NewTail("/dir").BuildPath("x")` теперь даёт `"/dirx"`, а не `"/dir/x"`;
 - `mrpath.NewPlaceholder()`: несколько "/" на стыках с плейсхолдером сводятся к одному;
   если плейсхолдер стоит в конце шаблона, завершающие "/" значения сохраняются (как в `NewTail`);
+- Префикс ошибок `util/ximage` изменён с устаревшего `"mrlib/extfile: "` на `"ximage: "`;
 
 ### Removed
 - Константа `mrpath.Placeholder`, вместо `NewPlaceholder(basePath, mrpath.Placeholder)`
@@ -19,6 +34,10 @@
 - `mrpath.NewPlaceholder()` возвращал ошибку «placeholder is not found», если плейсхолдер
   стоял в начале шаблона;
 - `mrpath.NewTail()` сводил "/" схемы URL в `basePath` (`"https://"` → `"https:/"`);
+- `crypt.GenerateBytes()` и `crypt.GenerateSequence()` зацикливались на пустом `charset`,
+  теперь возвращают ошибку;
+- `mrmsg.FmtReplacer.Replace()` и `ReplaceTo()` при нехватке аргументов дописывали `!MISSINGARG`
+  в свободную ёмкость слайса аргументов вызывающего;
 
 ## 2026-10-11
 ### Changed

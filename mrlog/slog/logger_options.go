@@ -49,8 +49,7 @@ func WithLevel(value string) Option {
 	}
 }
 
-// WithJsonFormat - включает вывод логов в формате JSON.
-// При включении отключает цветной режим (colorMode).
+// WithJsonFormat - включает вывод логов в формате JSON (имеет приоритет над WithColorMode).
 func WithJsonFormat(value bool) Option {
 	return func(o *options) {
 		o.jsonFormat = value
@@ -82,15 +81,15 @@ func WithTimeZone(value string) Option {
 }
 
 // WithMiddlewareHandler - добавляет один или несколько middleware-обработчиков.
-// Middleware применяются в порядке добавления и позволяют модифицировать slog.Handler.
+// Запись проходит через middleware в порядке их добавления, затем попадает в основной обработчик.
 func WithMiddlewareHandler(value ...func(next stdlog.Handler) stdlog.Handler) Option {
 	return func(o *options) {
 		o.middlewareHandlers = append(o.middlewareHandlers, value...)
 	}
 }
 
-// WithReplaceAttrs - задаёт функцию для кастомной обработки атрибутов перед выводом.
-// Позволяет изменять ключи, значения и форматирование атрибутов.
+// WithReplaceAttrs - задаёт функцию обработки каждого атрибута перед выводом
+// (вызывается до форматирования времени и уровня). Нулевой атрибут (slog.Attr{}) удаляется из записи.
 func WithReplaceAttrs(value func(attr stdlog.Attr) (newAttr stdlog.Attr)) Option {
 	return func(o *options) {
 		o.replaceAttr = value

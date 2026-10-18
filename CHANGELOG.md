@@ -1,6 +1,23 @@
 # GoCore Changelog
 Все изменения библиотеки GoCore будут документироваться на этой странице.
 
+## 2026-10-18
+### Changed
+- `mrtrace/process.ExtractKeysValues()` (и `ContextManager.ExtractKeysValues()`) возвращает `nil`,
+  если в контексте не найдено ни одного ID (раньше - пустой слайс);
+- `mrtrace/process.ExtractKeysValues()` больше не проверяет контекст на nil: nil-контекст - ошибка
+  вызывающего, как и в `ExtractCorrelationID()`;
+
+### Removed
+- `mrtrace/process.GetIDWithID`: тип нигде не использовался;
+
+### Fixed
+- `mrtrace/process.GenerateID()`, `errors/runtime/instance.GenerateID()`: случайное число,
+  у которого меньше 12 разрядов в base36 (~0,7% вызовов), дополнялось нулями справа, а не слева,
+  из-за чего разные числа давали одинаковый текст; заодно случайная часть теперь всегда пишется
+  с фиксированной позиции (раньше смещение зависело от длины метки времени, что ломало ID только
+  при часах до ~1974 года);
+
 ## 2026-10-16
 ### Changed
 - `mrlog.Enabled()`, `mrlog.DebugEnabled()`, `mrlog.InfoEnabled()`: из документации убрано обещание

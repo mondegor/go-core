@@ -17,45 +17,23 @@ type (
 		Key   string
 		GetID func(ctx context.Context) string
 	}
-
-	// GetIDWithID - пара: функция получения ID из контекста и функция установки значения в контекст.
-	GetIDWithID struct {
-		GetID  func(ctx context.Context) string
-		WithID func(ctx context.Context, id string) context.Context
-	}
 )
 
-// // NewContextWithIDs - возвращает новый контекст содержащий
-// // только все ID процессы, скопированные из указанного контекста.
-// func NewContextWithIDs(originalCtx context.Context, values []GetIDWithID) context.Context {
-// 	ctx := context.Background()
-//
-// 	if originalCtx == nil || originalCtx == ctx {
-// 		return ctx
-// 	}
-//
-// 	for _, v := range values {
-// 		if value := v.GetID(ctx); value != "" {
-// 			ctx = v.WithID(ctx, value)
-// 		}
-// 	}
-//
-// 	return ctx
-// }
-
 // ExtractKeysValues - извлекает ID процессов из контекста по указанному списку ключей.
-// Возвращает плоский слайс пар ключ/значение: ["key1", "value1", "key2", "value2", ...].
-// Пропускает ключи с пустыми значениями.
-// Возвращает nil для nil-контекста, context.Background() или пустого списка ключей.
+// Возвращает плоский слайс пар ключ/значение: ["key1", "value1", "key2", "value2", ...],
+// ключи с пустыми значениями пропускаются. Если ни одного ID не найдено, возвращает nil.
 func ExtractKeysValues(ctx context.Context, values []KeyGetID) (keyValue []any) {
-	if ctx == nil || ctx == context.Background() || len(values) == 0 {
+	if ctx == context.Background() || len(values) == 0 {
 		return nil
 	}
 
-	keyValue = make([]any, 0, len(values))
-
 	for _, v := range values {
 		if value := v.GetID(ctx); value != "" {
+			if keyValue == nil {
+				// слайс выделяется только при первом найденном ID: на каждый ID - ключ и значение
+				keyValue = make([]any, 0, 2*len(values))
+			}
+
 			keyValue = append(keyValue, v.Key, value)
 		}
 	}
@@ -63,9 +41,8 @@ func ExtractKeysValues(ctx context.Context, values []KeyGetID) (keyValue []any) 
 	return keyValue[0:len(keyValue):len(keyValue)]
 }
 
-// ExtractCorrelationID - ищет первый непустой ID в контексте из списка ключей.
-// Используется для определения ID корреляции, который может храниться под разными ключами.
-// Возвращает пустую строку, если ни один ключ не найден.
+// ExtractCorrelationID - возвращает первый непустой ID из контекста по списку ключей
+// (ID корреляции может храниться под разными ключами) или пустую строку.
 func ExtractCorrelationID(ctx context.Context, values []KeyGetID) string {
 	for _, v := range values {
 		if id := v.GetID(ctx); id != "" {
@@ -97,24 +74,3 @@ func ToKeyGetID(values []KeyGetIDWithID) []KeyGetID {
 
 	return list
 }
-
-// // ToGetIDWithID - возвращает преобразование []KeyGetIDWithID в []GetIDWithID.
-// func ToGetIDWithID(values []KeyGetIDWithID) []GetIDWithID {
-// 	if len(values) == 0 {
-// 		return nil
-// 	}
-//
-// 	list := make([]GetIDWithID, 0, len(values))
-//
-// 	for _, v := range values {
-// 		list = append(
-// 			list,
-// 			GetIDWithID{
-// 				GetID:  v.GetID,
-// 				WithID: v.WithID,
-// 			},
-// 		)
-// 	}
-//
-// 	return list
-// }

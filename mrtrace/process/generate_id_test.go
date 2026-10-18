@@ -1,9 +1,11 @@
 package process_test
 
 import (
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,6 +31,21 @@ func TestGenerateID_Format(t *testing.T) {
 	assert.Len(t, parts[0], 12, "Первая часть (timestamp) должна быть 12 символов")
 	assert.Len(t, parts[1], 6, "Вторая часть (random1) должна быть 6 символов")
 	assert.Len(t, parts[2], 4, "Третья часть (random2) должна быть 4 символа")
+}
+
+// TestGenerateID_TimestampDecodes проверяет, что первая часть ID - это UnixNano
+// момента генерации в base36, записанный с выравниванием по правому краю.
+func TestGenerateID_TimestampDecodes(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	id := process.GenerateID()
+
+	got, err := strconv.ParseInt(id[:12], 36, 64)
+	require.NoError(t, err)
+
+	// допуск с запасом покрывает время вызова и небольшой перевод системных часов
+	assert.WithinDuration(t, now, time.Unix(0, got), time.Minute)
 }
 
 // TestGenerateID_ContainsOnlyUppercaseAlphanumeric проверяет, что ID содержит

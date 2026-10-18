@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	bufferLen   = 12 // math.Ceil(64 * math.Log(2) / math.Log(float64(baseNCharsLen)))
+	bufferLen   = 12 // разрядов base36 на число (метка времени и случайное число); в ID попадает срез [idOffset:idOffset+idBufferLen]
 	idOffset    = 1  // ведущие обрезанные символы
 	idDash1Pos  = 11
 	idDash2Pos  = 16
@@ -21,7 +21,12 @@ var (
 	rndIfError    = [...]byte{0x0, 0x0, 0xee, 0xee, 0xee, 0xee, 0x0, 0x0} // данные по умолчанию при ошибке
 )
 
-// GenerateID - генерирует уникальный идентификатор в формате XXXXXXXXXX-XXXX-XXXX.
+// GenerateID - генерирует идентификатор в формате TTTTTTTTTT-XXXX-XXXX (символы 0-9, A-Z):
+// 10 символов метки времени (UnixNano в base36 без старшего и младшего разрядов: шаг 36 нс,
+// значение повторяется примерно каждые 4 года), далее 8 символов случайного числа.
+// В пределах одного шага метки времени (и при её повторе через ~4 года) уникальность
+// обеспечивают только 8 случайных символов (36^8 ≈ 2.8·10^12 значений): этого достаточно
+// для сопоставления ошибки с записью в логе, но не для глобально уникального ключа.
 // Используется для идентификации конкретных экземпляров runtime-ошибок.
 func GenerateID() string {
 	var (
@@ -29,44 +34,28 @@ func GenerateID() string {
 		rnd [len(rndIfError)]byte
 	)
 
-	pos := encodeBaseN(buf[:], uint64(time.Now().UnixNano()))
+	encodeBaseN(buf[:bufferLen], uint64(time.Now().UnixNano()))
 
 	if _, err := rand.Read(rnd[:]); err != nil {
 		rnd = rndIfError
 	}
 
-	encodeBaseN(buf[pos:], binary.BigEndian.Uint64(rnd[:]))
+	// смещение от взятия по модулю 36^12 затрагивает только старший разряд (~0.005 бита) и для ID несущественно
+	encodeBaseN(buf[bufferLen:], binary.BigEndian.Uint64(rnd[:]))
 
 	buf[idDash1Pos] = '-'
 	buf[idDash2Pos] = '-'
 
-	return string(buf[idOffset : idOffset+idBufferLen]) // tTTTTTTTTTT-XXXX-XXXXxxx
+	return string(buf[idOffset : idOffset+idBufferLen]) // TTTTTTTTTT-XXXX-XXXX
 }
 
-func encodeBaseN(buf []byte, n uint64) (pos int) {
-	var digits [bufferLen + 1]byte // 1 byte для защиты от переполнения
-
-	// цифры переводятся в символы в обратном порядке
-	for n > 0 {
+// encodeBaseN - записывает в buf ровно bufferLen младших разрядов числа n в Base-N:
+// недостающие старшие разряды заполняются символом '0', лишние старшие разряды отбрасываются.
+func encodeBaseN(buf []byte, n uint64) {
+	// цифры записываются с конца буфера, от младшего разряда к старшему
+	for i := bufferLen - 1; i >= 0; i-- {
 		q := n / baseNCharsLen
-		digits[pos] = baseNChars[n-q*baseNCharsLen]
-		pos++
+		buf[i] = baseNChars[n-q*baseNCharsLen]
 		n = q
 	}
-
-	if pos > bufferLen {
-		pos = bufferLen
-	}
-
-	for i := 0; i < pos; i++ {
-		buf[i] = digits[pos-1-i]
-	}
-
-	// остаток заполняется символом '0'
-	for i := pos; i < bufferLen; i++ {
-		buf[i] = baseNChars[0]
-	}
-
-	// pos всегда не больше bufferLen
-	return pos
 }

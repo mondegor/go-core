@@ -12,7 +12,6 @@ type (
 		keyGetID  map[string]func(ctx context.Context) string
 		keyWithID map[string]func(ctx context.Context, id string) context.Context
 
-		newContextWithIDs    []GetIDWithID
 		extractKeysValues    []KeyGetID
 		extractCorrelationID []KeyGetID
 
@@ -32,11 +31,12 @@ type (
 // NewContextManager - создаёт менеджер контекста для управления ID процессов.
 // Параметры:
 //   - keyGetIDWithID - список триад (ключ, функция получения ID, функция установки ID);
-//   - correlationKeys - список ключей, которые могут использоваться как ID корреляции;
+//   - correlationKeys - ключи, значения которых могут служить ID корреляции, в порядке приоритета;
 //   - idGenerator - генератор уникальных ID;
-//   - logger - логгер для предупреждений при отсутствии ключей;
+//   - logger - логгер для предупреждений об обращении к незарегистрированным ключам.
 //
-// Возвращает ошибку при дублировании ключей или отсутствии correlationKeys в keyGetIDWithID.
+// Возвращает ошибку при дублировании ключей в keyGetIDWithID или если какого-либо ключа
+// из correlationKeys нет в keyGetIDWithID (повторы в correlationKeys не проверяются).
 func NewContextManager(
 	keyGetIDWithID []KeyGetIDWithID,
 	correlationKeys []string,
@@ -50,26 +50,17 @@ func NewContextManager(
 		keyGetID:  make(map[string]func(ctx context.Context) string, len(keyGetIDWithID)),
 		keyWithID: make(map[string]func(ctx context.Context, id string) context.Context, len(keyGetIDWithID)),
 
-		newContextWithIDs:    make([]GetIDWithID, 0, len(keyGetIDWithID)),
 		extractKeysValues:    make([]KeyGetID, 0, len(keyGetIDWithID)),
 		extractCorrelationID: make([]KeyGetID, 0, len(correlationKeys)),
 	}
 
 	for _, v := range keyGetIDWithID {
 		if _, ok := cm.keyGetID[v.Key]; ok {
-			return nil, fmt.Errorf("duplicated key '%q'", v.Key)
+			return nil, fmt.Errorf("duplicated key %q", v.Key)
 		}
 
 		cm.keyGetID[v.Key] = v.GetID
 		cm.keyWithID[v.Key] = v.WithID
-
-		cm.newContextWithIDs = append(
-			cm.newContextWithIDs,
-			GetIDWithID{
-				GetID:  v.GetID,
-				WithID: v.WithID,
-			},
-		)
 
 		cm.extractKeysValues = append(
 			cm.extractKeysValues,
@@ -134,20 +125,13 @@ func (e *contextManager) WithGeneratedProcessID(ctx context.Context, key string)
 	return ctx
 }
 
-// // NewContextWithIDs - возвращает новый контекст содержащий
-// // только все ID процессы, скопированные из указанного контекста.
-// func (e *contextManager) NewContextWithIDs(originalCtx context.Context) context.Context {
-// 	return NewContextWithIDs(originalCtx, e.newContextWithIDs)
-// }
-
-// ExtractKeysValues - извлекает все зарегистрированные ID процессов из контекста.
-// Возвращает плоский слайс пар ключ/значение: ["key1", "value1", "key2", "value2", ...].
+// ExtractKeysValues - извлекает все зарегистрированные ID процессов из контекста (см. функцию ExtractKeysValues).
 func (e *contextManager) ExtractKeysValues(ctx context.Context) []any {
 	return ExtractKeysValues(ctx, e.extractKeysValues)
 }
 
-// ExtractCorrelationID - извлекает первый найденный ID корреляции из контекста.
-// Проверяет ключи в порядке, указанном при создании ContextManager.
+// ExtractCorrelationID - возвращает первый непустой ID по ключам корреляции
+// в порядке, указанном при создании, или пустую строку.
 func (e *contextManager) ExtractCorrelationID(ctx context.Context) string {
 	return ExtractCorrelationID(ctx, e.extractCorrelationID)
 }

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	bufferLen   = 12 // math.Ceil(64 * math.Log(2) / math.Log(float64(baseNCharsLen)))
+	bufferLen   = 12 // 36^12 ns ≈ 150 лет: хватает для UnixNano до ~2120 года; у 64-битного случайного числа старший разряд отбрасывается
 	idDash1Pos  = 12
 	idDash2Pos  = 19
 	idBufferLen = 24 // timestamp(12) + dash(1) + random1(6) + dash(1) + random2(4)
@@ -20,7 +20,8 @@ var (
 	rndIfError    = [...]byte{0x0, 0x0, 0xee, 0xee, 0xee, 0xee, 0x0, 0x0} // данные по умолчанию при ошибке
 )
 
-// GenerateID - генерирует уникальный идентификатор в формате XXXXXXXXXXXX-XXXXXX-XXXX.
+// GenerateID - генерирует идентификатор в формате TTTTTTTTTTTT-XXXXXX-XXXX (символы 0-9, A-Z):
+// 12 символов метки времени (UnixNano в base36), далее 10 символов случайного числа.
 // Используется для идентификации процессов при трассировке запросов.
 func GenerateID() string {
 	var (
@@ -28,13 +29,13 @@ func GenerateID() string {
 		rnd [len(rndIfError)]byte
 	)
 
-	pos := encodeBaseN(buf[:], uint64(time.Now().UnixNano()))
+	encodeBaseN(buf[:bufferLen], uint64(time.Now().UnixNano()))
 
 	if _, err := rand.Read(rnd[:]); err != nil {
 		rnd = rndIfError
 	}
 
-	encodeBaseN(buf[pos:], binary.BigEndian.Uint64(rnd[:]))
+	encodeBaseN(buf[bufferLen:], binary.BigEndian.Uint64(rnd[:]))
 
 	buf[idDash1Pos] = '-'
 	buf[idDash2Pos] = '-'
@@ -42,30 +43,13 @@ func GenerateID() string {
 	return string(buf[:idBufferLen]) // TTTTTTTTTTTT-XXXXXX-XXXX
 }
 
-func encodeBaseN(buf []byte, n uint64) (pos int) {
-	var digits [bufferLen + 1]byte // 1 byte для защиты от переполнения
-
-	// цифры переводятся в символы в обратном порядке
-	for n > 0 {
+// encodeBaseN - записывает в buf ровно bufferLen младших разрядов числа n в Base-N:
+// недостающие старшие разряды заполняются символом '0', лишние старшие разряды отбрасываются.
+func encodeBaseN(buf []byte, n uint64) {
+	// цифры записываются с конца буфера, от младшего разряда к старшему
+	for i := bufferLen - 1; i >= 0; i-- {
 		q := n / baseNCharsLen
-		digits[pos] = baseNChars[n-q*baseNCharsLen]
-		pos++
+		buf[i] = baseNChars[n-q*baseNCharsLen]
 		n = q
 	}
-
-	if pos > bufferLen {
-		pos = bufferLen
-	}
-
-	for i := 0; i < pos; i++ {
-		buf[i] = digits[pos-1-i]
-	}
-
-	// остаток заполняется символом '0'
-	for i := pos; i < bufferLen; i++ {
-		buf[i] = baseNChars[0]
-	}
-
-	// pos всегда не больше bufferLen
-	return pos
 }

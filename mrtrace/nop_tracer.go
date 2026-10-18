@@ -11,7 +11,6 @@ type (
 )
 
 // NopTracer - создаёт Tracer, который игнорирует все данные трассировки.
-// Полезно для тестов или когда трассировка не требуется.
 func NopTracer() Tracer {
 	return nopTracer{}
 }

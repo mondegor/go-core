@@ -1,9 +1,11 @@
 package instance_test
 
 import (
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,6 +31,32 @@ func TestGenerateID_Format(t *testing.T) {
 	assert.Len(t, parts[0], 10, "Первая часть (timestamp) должна быть 10 символов")
 	assert.Len(t, parts[1], 4, "Вторая часть (random1) должна быть 4 символа")
 	assert.Len(t, parts[2], 4, "Третья часть (random2) должна быть 4 символа")
+}
+
+// TestGenerateID_TimestampDecodes проверяет, что первая часть ID - это UnixNano
+// момента генерации в base36 без старшего и младшего разрядов (12 разрядов -> 10 символов).
+func TestGenerateID_TimestampDecodes(t *testing.T) {
+	t.Parallel()
+
+	const (
+		base   = 36
+		modulo = 3656158440062976 // 36^10
+	)
+
+	now := uint64(time.Now().UnixNano())
+	id := instance.GenerateID()
+
+	got, err := strconv.ParseUint(id[:10], base, 64)
+	require.NoError(t, err)
+
+	// метка усечена по модулю 36^10, поэтому берётся кратчайшее смещение между got и now по кругу;
+	// допуск с запасом покрывает время вызова и небольшой перевод системных часов
+	diff := (now/base + modulo - got) % modulo
+	if diff > modulo/2 {
+		diff = modulo - diff
+	}
+
+	assert.LessOrEqual(t, diff*base, uint64(time.Minute))
 }
 
 // TestGenerateID_ContainsOnlyUppercaseAlphanumeric проверяет, что ID содержит

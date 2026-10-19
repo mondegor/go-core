@@ -99,7 +99,7 @@ func NewEntityMetaUpdate(logger mrlog.Logger, entity any) (*EntityMetaUpdate, er
 			logger.Warn(
 				context.Background(),
 				"check field type warning, skipped",
-				"error", fmt.Errorf("field is not supported (field='%s', type='%s')", rvt.Field(i).Name, fieldType.Kind()),
+				"error", fmt.Errorf("field is not supported (field=%s, type=%s)", rvt.Field(i).Name, fieldType.Kind()),
 			)
 
 			continue
@@ -133,7 +133,7 @@ func NewEntityMetaUpdate(logger mrlog.Logger, entity any) (*EntityMetaUpdate, er
 func parseTagUpdate(rvt reflect.Type, value, dbName string) (string, error) {
 	errFunc := func(errString string) (string, error) {
 		return "", fmt.Errorf(
-			"[%s] %s: parse error in '%s': %s",
+			"[%s] %s: parse error in %q: %s",
 			modelNameEntityMetaUpdate,
 			rvt.String(),
 			value,
@@ -143,18 +143,18 @@ func parseTagUpdate(rvt reflect.Type, value, dbName string) (string, error) {
 
 	if value == "+" {
 		if dbName == "" {
-			return errFunc(fmt.Sprintf("tag '%s' is empty", fieldTagDBFieldName))
+			return errFunc(fmt.Sprintf("tag %s is empty", fieldTagDBFieldName))
 		}
 
 		if !regexpDbName.MatchString(dbName) {
-			return errFunc(fmt.Sprintf("value '%s' from '%s' is incorrect", dbName, fieldTagDBFieldName))
+			return errFunc(fmt.Sprintf("value %q from %s is incorrect", dbName, fieldTagDBFieldName))
 		}
 
 		return dbName, nil
 	}
 
 	if !regexpDbName.MatchString(value) {
-		return errFunc(fmt.Sprintf("value '%s' from '%s' is incorrect", value, fieldTagFieldUpdate))
+		return errFunc(fmt.Sprintf("value %q from %s is incorrect", value, fieldTagFieldUpdate))
 	}
 
 	return value, nil

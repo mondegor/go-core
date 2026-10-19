@@ -22,5 +22,5 @@ func NewParamMaxValueError(paramType string, maxValue any) error {
 }
 
 func (e *ParamMaxValueError) Error() string {
-	return fmt.Sprintf("param contains value greater then max (type='%s', maxValue='%v')", e.Type, e.MaxValue)
+	return fmt.Sprintf("param contains value greater than max (type=%s, maxValue=%v)", e.Type, e.MaxValue)
 }

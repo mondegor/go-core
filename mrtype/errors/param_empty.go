@@ -20,5 +20,5 @@ func NewParamEmptyError(paramType string) error {
 }
 
 func (e *ParamEmptyError) Error() string {
-	return fmt.Sprintf("param value is empty (type='%s')", e.Type)
+	return fmt.Sprintf("param value is empty (type=%s)", e.Type)
 }

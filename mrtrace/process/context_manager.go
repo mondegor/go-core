@@ -74,7 +74,7 @@ func NewContextManager(
 	for _, key := range correlationKeys {
 		getID, ok := cm.keyGetID[key]
 		if !ok {
-			return nil, fmt.Errorf("correlation key not found (key='%s')", key)
+			return nil, fmt.Errorf("correlation key not found (key=%q)", key)
 		}
 
 		cm.extractCorrelationID = append(

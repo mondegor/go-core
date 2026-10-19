@@ -31,7 +31,7 @@ func ParseTimeZone(value string) (*time.Location, error) {
 
 	loc, err := time.LoadLocation(value)
 	if err != nil {
-		return time.UTC, fmt.Errorf("error loading timezone (value='%s'): %w", value, err)
+		return time.UTC, fmt.Errorf("error loading timezone (value=%q): %w", value, err)
 	}
 
 	return loc, nil

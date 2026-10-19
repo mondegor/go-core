@@ -13,11 +13,11 @@ func ValidateActionGroups(actionGroups []ActionGroup) error {
 
 	for _, group := range actionGroups {
 		if uniqNames[group.Name] {
-			return fmt.Errorf("duplicate actionGroup name '%s'", group.Name)
+			return fmt.Errorf("duplicate actionGroup name %q", group.Name)
 		}
 
 		if uniqPaths[group.BasePath] {
-			return fmt.Errorf("duplicate base path for actionGroup (path='%s', group='%s')", group.BasePath, group.Name)
+			return fmt.Errorf("duplicate base path for actionGroup (path=%q, group=%q)", group.BasePath, group.Name)
 		}
 
 		uniqNames[group.Name] = true

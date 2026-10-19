@@ -129,7 +129,7 @@ func parseTagSort(rvt reflect.Type, value string, canBeDefault bool) (parsedTagS
 
 	errFunc := func(errString string) (parsedTagSort, error) {
 		return parsedTagSort{}, fmt.Errorf(
-			"[%s] %s: parse error in '%s': %s",
+			"[%s] %s: parse error in %q: %s",
 			modelNameEntityMetaOrderBy,
 			rvt.String(),
 			value,

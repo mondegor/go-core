@@ -168,7 +168,7 @@ func (p *ProcessWaitForNotification) listen(ctx context.Context) error {
 
 	for name := range p.listenerChannelMap {
 		if _, err := conn.Exec(ctx, "LISTEN "+pgx.Identifier{name}.Sanitize()); err != nil {
-			return fmt.Errorf("unable to start listening channel '%s': %w", name, err)
+			return fmt.Errorf("unable to start listening channel %q: %w", name, err)
 		}
 	}
 
@@ -213,9 +213,9 @@ func (p *ProcessWaitForNotification) waitSomePeriod(ctx context.Context, conn *p
 				// поэтому нет смысла отправлять повторное событие, поэтому оно пропускается
 				select {
 				case ch <- struct{}{}:
-					p.logger.Debug(ctx, fmt.Sprintf("Received notification: PID=%d, Channel='%s', Payload='%s'", note.PID, note.Channel, note.Payload))
+					p.logger.Debug(ctx, fmt.Sprintf("Received notification: PID=%d, Channel=%q, Payload=%q", note.PID, note.Channel, note.Payload))
 				default:
-					p.logger.Info(ctx, fmt.Sprintf("Repeated notification: PID=%d, Channel='%s', Payload='%s' [skipped]", note.PID, note.Channel, note.Payload))
+					p.logger.Info(ctx, fmt.Sprintf("Repeated notification: PID=%d, Channel=%q, Payload=%q [skipped]", note.PID, note.Channel, note.Payload))
 				}
 
 				continue

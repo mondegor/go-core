@@ -78,7 +78,7 @@ func (mt *TypeList) ContentTypeByExt(value string) (string, error) {
 		return contentType, nil
 	}
 
-	return "", fmt.Errorf("mime not found for arg '%s'", value)
+	return "", fmt.Errorf("mime not found for arg %q", value)
 }
 
 // ExtByContentType - возвращает расширение по типу файла (первое из зарегистрированных для этого типа).
@@ -92,5 +92,5 @@ func (mt *TypeList) ExtByContentType(value string) (string, error) {
 		return ext, nil
 	}
 
-	return "", fmt.Errorf("ext not found for arg '%s'", value)
+	return "", fmt.Errorf("ext not found for arg %q", value)
 }

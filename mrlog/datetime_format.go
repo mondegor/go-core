@@ -26,5 +26,5 @@ func ParseDateTimeFormat(value string) (string, error) {
 		return time.Kitchen, nil
 	}
 
-	return time.RFC3339, fmt.Errorf("the value is not a datetime format value (value='%s')", value)
+	return time.RFC3339, fmt.Errorf("the value is not a datetime format value (value=%q)", value)
 }

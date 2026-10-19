@@ -179,5 +179,5 @@ func (l *LocationList) LocationByName(value string) (*time.Location, error) {
 		return loc, nil
 	}
 
-	return l.defaultLocation, fmt.Errorf("timezone not found for arg '%s'", value)
+	return l.defaultLocation, fmt.Errorf("timezone not found for arg %q", value)
 }

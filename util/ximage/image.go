@@ -36,7 +36,7 @@ func unsafeDecodeImageConfig(file io.ReadSeeker, contentType string) (image.Conf
 		return gif.DecodeConfig(file)
 	}
 
-	return image.Config{}, fmt.Errorf("the image content type is not supported: '%s'", contentType)
+	return image.Config{}, fmt.Errorf("the image content type is not supported: %q", contentType)
 }
 
 // CheckImage - возвращает ошибку, если изображение не удалось извлечь из file.
@@ -72,7 +72,7 @@ func unsafeDecodeImage(file io.ReadSeeker, contentType string) (image.Image, err
 		return gif.Decode(file)
 	}
 
-	return nil, fmt.Errorf("the image content type is not supported: '%s'", contentType)
+	return nil, fmt.Errorf("the image content type is not supported: %q", contentType)
 }
 
 func wrapError(err error) error {

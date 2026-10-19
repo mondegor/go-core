@@ -23,5 +23,10 @@ func NewParamIncorrectError(paramType string, cause error) error {
 }
 
 func (e *ParamIncorrectError) Error() string {
-	return fmt.Sprintf("param contains incorrect value '%s' (type='%s')", e.Cause.Error(), e.Type)
+	return fmt.Sprintf("param contains incorrect value (type=%s): %s", e.Type, e.Cause)
+}
+
+// Unwrap - возвращает исходную ошибку парсинга или валидации.
+func (e *ParamIncorrectError) Unwrap() error {
+	return e.Cause
 }

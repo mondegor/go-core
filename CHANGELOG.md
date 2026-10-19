@@ -1,6 +1,25 @@
 # GoCore Changelog
 Все изменения библиотеки GoCore будут документироваться на этой странице.
 
+## 2026-10-19
+### Changed
+- В текстах ошибок и логов значения из конфигов и внешнего ввода выводятся через `%q` (в двойных
+  кавычках с экранированием) вместо `'%s'`; идентификаторы из кода (имена enum, типов, полей)
+  выводятся без кавычек, у числовых значений кавычки убраны (`value='%d'` -> `value=%d`).
+  Затронуты пакеты `mraccess`, `mrlocale`, `mrlog`, `mrlock`, `mrmsg/templater`,
+  `mrpostgres/listennotify`, `mrstorage/mrsql`, `mrtrace/process`, `mrtype`, `mrworkflow/itemstatus`,
+  `util/mime`, `util/timezone`, `util/ximage`; код, сравнивающий тексты этих ошибок, нужно обновить;
+- `mraccess`: текст ошибки об отсутствующей роли приведён к общему виду: `no role found (name="...")`;
+- `mrtype/errors.ParamIncorrectError`: текст исходной ошибки выводится в конце сообщения после `: `,
+  а не в кавычках как значение: `param contains incorrect value (type=...): <cause>`;
+- `mrtype/errors.ParamIncorrectError` реализует `Unwrap()`: исходная ошибка доступна через `errors.Is`/`errors.As`;
+  как следствие `errors.As` на `*ParamEmptyError`/`*ParamLenMaxError` и т.п. теперь срабатывает и на ошибку,
+  обёрнутую в `ParamIncorrectError` (например, ошибки `parse.PageParams`), — код, различающий эти ошибки
+  последовательными проверками типов, нужно проверить;
+- `mrtype/errors.ParamLenMaxError`, `ParamMaxValueError`: исправлена опечатка в тексте (`greater then` -> `greater than`);
+- `mrworkflow/itemstatus.Enum.Scan`: число вне диапазона `uint8` возвращает ошибку `value is out of range`,
+  а не `invalid type assertion`;
+
 ## 2026-10-18
 ### Changed
 - `mrtrace/process.ExtractKeysValues()` (и `ContextManager.ExtractKeysValues()`) возвращает `nil`,

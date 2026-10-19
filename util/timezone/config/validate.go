@@ -41,11 +41,11 @@ func ValidateTimeZones(names []string) error {
 		}
 
 		if uniqNames[name] {
-			return fmt.Errorf("duplicate timezone name '%s'", name)
+			return fmt.Errorf("duplicate timezone name %q", name)
 		}
 
 		if _, err := time.LoadLocation(name); err != nil {
-			return fmt.Errorf("error loading timezone (name='%s'): %w", name, err)
+			return fmt.Errorf("error loading timezone (name=%q): %w", name, err)
 		}
 
 		uniqNames[name] = true

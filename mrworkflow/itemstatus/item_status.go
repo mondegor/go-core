@@ -48,7 +48,7 @@ func (e *Enum) Set(value uint8) error {
 		return nil
 	}
 
-	return fmt.Errorf("value is not found in enum set (value='%d', enum='%s')", value, enumName)
+	return fmt.Errorf("value is not found in enum set (value=%d, enum=%s)", value, enumName)
 }
 
 // String - возвращает значение в виде строки.
@@ -64,7 +64,7 @@ func (e Enum) String() string {
 func (e Enum) MarshalJSON() ([]byte, error) {
 	bytes, err := json.Marshal(e.String())
 	if err != nil {
-		return nil, fmt.Errorf("marshal error (enum='%s'): %w", enumName, err)
+		return nil, fmt.Errorf("marshal error (enum=%s): %w", enumName, err)
 	}
 
 	return bytes, nil
@@ -75,7 +75,7 @@ func (e *Enum) UnmarshalJSON(data []byte) error {
 	var value string
 
 	if err := json.Unmarshal(data, &value); err != nil {
-		return fmt.Errorf("unmarshal error (enum='%s'): %w", enumName, err)
+		return fmt.Errorf("unmarshal error (enum=%s): %w", enumName, err)
 	}
 
 	val, err := Parse(value)
@@ -90,11 +90,16 @@ func (e *Enum) UnmarshalJSON(data []byte) error {
 
 // Scan implements the Scanner interface.
 func (e *Enum) Scan(value any) error {
-	if val, ok := value.(int64); ok && val >= 0 && val <= math.MaxUint8 {
-		return e.Set(uint8(val))
+	val, ok := value.(int64)
+	if !ok {
+		return fmt.Errorf("invalid type assertion (type=%s, value=%#v)", enumName, value)
 	}
 
-	return fmt.Errorf("invalid type assertion (type='%s', value='%+v')", enumName, value)
+	if val < 0 || val > math.MaxUint8 {
+		return fmt.Errorf("value is out of range (type=%s, value=%d)", enumName, val)
+	}
+
+	return e.Set(uint8(val))
 }
 
 // Value implements the driver.Valuer interface.
@@ -108,7 +113,7 @@ func Parse(value string) (Enum, error) {
 		return parsedValue, nil
 	}
 
-	return 0, fmt.Errorf("key is not found in enum set (enum='%s', key='%s')", enumName, value)
+	return 0, fmt.Errorf("key is not found in enum set (enum=%s, key=%q)", enumName, value)
 }
 
 // ParseList - парсит массив строковых значений и

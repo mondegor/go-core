@@ -22,5 +22,5 @@ func NewParamRegexpError(paramType, regexp string) error {
 }
 
 func (e *ParamRegexpError) Error() string {
-	return fmt.Sprintf("param value doesn't match regexp (type='%s', regexp='%s')", e.Type, e.Regexp)
+	return fmt.Sprintf("param value doesn't match regexp (type=%s, regexp=%q)", e.Type, e.Regexp)
 }

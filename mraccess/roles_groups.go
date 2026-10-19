@@ -37,7 +37,7 @@ func NewRolesGroupSet(groups []RoleGroup, source roleRightsSource) (RightsGetter
 		for _, role := range group.Roles {
 			rights, ok := source.RoleRights(role)
 			if !ok {
-				return nil, fmt.Errorf("no role found: name=%s", role)
+				return nil, fmt.Errorf("no role found (name=%q)", role)
 			}
 
 			for _, right := range rights {

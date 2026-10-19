@@ -22,5 +22,5 @@ func NewParamLenMaxError(paramType string, maxLen int) error {
 }
 
 func (e *ParamLenMaxError) Error() string {
-	return fmt.Sprintf("param has value length greater then max characters (type='%s', maxLen=%d)", e.Type, e.MaxLen)
+	return fmt.Sprintf("param has value length greater than max characters (type=%s, maxLen=%d)", e.Type, e.MaxLen)
 }

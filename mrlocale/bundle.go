@@ -74,7 +74,7 @@ func NewBundle(languages []string, opts ...BundleOption) (*Bundle, error) {
 	for i, lang := range languages {
 		tag, err := language.Parse(lang)
 		if err != nil {
-			return nil, fmt.Errorf("bundle create: parsing language '%s': %w", lang, err)
+			return nil, fmt.Errorf("bundle create: parsing language %q: %w", lang, err)
 		}
 
 		// уникальность проверяется по разобранному тегу, а не по строке: одна и та же
@@ -83,7 +83,7 @@ func NewBundle(languages []string, opts ...BundleOption) (*Bundle, error) {
 		// Сравнение тегов через == корректно: language.Parse приводит тег
 		// к канонической форме, поэтому разные записи одной локали равны побитово
 		if slices.Contains(languageTags[:i], tag) {
-			return nil, fmt.Errorf("bundle create: duplicate language '%s'", lang)
+			return nil, fmt.Errorf("bundle create: duplicate language %q", lang)
 		}
 
 		languageTags[i] = tag
@@ -96,14 +96,14 @@ func NewBundle(languages []string, opts ...BundleOption) (*Bundle, error) {
 	if o.defaultLanguage != "" {
 		tag, err := language.Parse(o.defaultLanguage)
 		if err != nil {
-			return nil, fmt.Errorf("bundle create: parsing default language '%s': %w", o.defaultLanguage, err)
+			return nil, fmt.Errorf("bundle create: parsing default language %q: %w", o.defaultLanguage, err)
 		}
 
 		// языки сверяются разобранными тегами, а не исходными строками: одна и та же
 		// локаль записывается по-разному ("ru-RU", "ru_RU", "ru-ru"), и сравнение строк
 		// отвергало бы язык по умолчанию, записанный не так, как он записан в списке
 		if !slices.Contains(languageTags, tag) {
-			return nil, fmt.Errorf("bundle create: default language is not supported (lang='%s')", o.defaultLanguage)
+			return nil, fmt.Errorf("bundle create: default language is not supported (lang=%q)", o.defaultLanguage)
 		}
 
 		defaultLanguage = tag
@@ -115,11 +115,11 @@ func NewBundle(languages []string, opts ...BundleOption) (*Bundle, error) {
 	}
 
 	if !isDomainInArray(o.messagesDomain, pr.Domains()) {
-		return nil, fmt.Errorf("bundle create: provider has not messages domain '%s'", o.messagesDomain)
+		return nil, fmt.Errorf("bundle create: provider has not messages domain %q", o.messagesDomain)
 	}
 
 	if !isDomainInArray(o.errorsDomain, pr.Domains()) {
-		return nil, fmt.Errorf("bundle create: provider has not errors domain '%s'", o.errorsDomain)
+		return nil, fmt.Errorf("bundle create: provider has not errors domain %q", o.errorsDomain)
 	}
 
 	if o.formatMessage == nil {

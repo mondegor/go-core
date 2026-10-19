@@ -73,7 +73,7 @@ func (l *Locker) LockWithExpiry(ctx context.Context, key string, expiry time.Dur
 
 	if exp, ok := l.keys[key]; ok && exp > time.Now().UnixNano() {
 		return nil, fmt.Errorf(
-			"%w [source=%s, lock_key=%s]",
+			"%w [source=%s, lock_key=%q]",
 			mrlock.ErrLockKeyNotObtained, lockerName, key,
 		)
 	}

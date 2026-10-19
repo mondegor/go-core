@@ -37,15 +37,15 @@ func ValidateLanguages(names []string) error {
 	for _, name := range names {
 		tag, err := language.Parse(name)
 		if err != nil {
-			return fmt.Errorf("error parsing language (name='%s'): %w", name, err)
+			return fmt.Errorf("error parsing language (name=%q): %w", name, err)
 		}
 
 		if code := tag.String(); name != code {
-			return fmt.Errorf("language '%s' is not canonical: expected '%s'", name, code)
+			return fmt.Errorf("language %q is not canonical: expected %q", name, code)
 		}
 
 		if base, _, _ := tag.Raw(); base.String() == baseUndetermined {
-			return fmt.Errorf("language '%s' is undetermined", name)
+			return fmt.Errorf("language %q is undetermined", name)
 		}
 
 		// уникальность проверяется по исходной строке, а не по разобранному тегу
@@ -54,7 +54,7 @@ func ValidateLanguages(names []string) error {
 		// По той же причине пара разных записей одной локали сюда не доходит -
 		// неканоничная из них отвергается раньше
 		if uniqNames[name] {
-			return fmt.Errorf("duplicate language name '%s'", name)
+			return fmt.Errorf("duplicate language name %q", name)
 		}
 
 		uniqNames[name] = true

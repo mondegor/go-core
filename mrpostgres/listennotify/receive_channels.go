@@ -24,5 +24,5 @@ func (rc *receiveChannels) Find(name string) (<-chan struct{}, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("no such channel (name='%s')", name)
+	return nil, fmt.Errorf("no such channel (name=%q)", name)
 }

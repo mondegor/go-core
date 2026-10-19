@@ -54,5 +54,5 @@ func Parse(value string) (Enum, error) {
 		return Error, nil
 	}
 
-	return Error, fmt.Errorf("the value is not a logging level (value='%s')", value)
+	return Error, fmt.Errorf("the value is not a logging level (value=%q)", value)
 }

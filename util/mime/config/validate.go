@@ -16,11 +16,11 @@ func ValidateMimeTypes(mimeTypes []mime.Type) error {
 		ext := strings.TrimPrefix(mt.Extension, ".")
 
 		if ext == "" {
-			return fmt.Errorf("mimeType extension is required for content type '%s'", mt.ContentType)
+			return fmt.Errorf("mimeType extension is required for content type %q", mt.ContentType)
 		}
 
 		if uniqExtensions[ext] {
-			return fmt.Errorf("duplicate mimeType extension for content type (ext='%s', type='%s')", mt.Extension, mt.ContentType)
+			return fmt.Errorf("duplicate mimeType extension for content type (ext=%q, type=%q)", mt.Extension, mt.ContentType)
 		}
 
 		uniqExtensions[ext] = true

@@ -34,7 +34,7 @@ func NewPermsProvider(dirPath string, roles, systemPermissions []string) (*Perms
 
 	for i, roleName := range roles {
 		if _, ok := p.roleRights[roleName]; ok {
-			return nil, fmt.Errorf("duplicate role detected in param 'roles' (role='%s', pos=%d)", roleName, i+1)
+			return nil, fmt.Errorf("duplicate role detected in param 'roles' (role=%q, pos=%d)", roleName, i+1)
 		}
 
 		fileCfg, err := loadRoleConfig(getFilePath(dirPath, roleName))

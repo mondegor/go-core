@@ -75,14 +75,14 @@ func TestLocationList_NameByOffset(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, ok := list.NameByOffset(tc.offset, tc.isDST)
+			got, ok := list.NameByOffset(tt.offset, tt.isDST)
 
 			require.True(t, ok)
-			assert.Equal(t, tc.want, got)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -123,11 +123,11 @@ func TestLocationList_NameByOffset_NotFound(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, ok := list.NameByOffset(tc.offset, tc.isDST)
+			got, ok := list.NameByOffset(tt.offset, tt.isDST)
 
 			assert.False(t, ok)
 			assert.Empty(t, got, "the name must not be set when the zone is not found")
@@ -228,13 +228,13 @@ func TestLocationList_NameByOffset_ZonesWithoutDST(t *testing.T) {
 		{name: "tehran", offset: 3*time.Hour + 30*time.Minute, want: "Asia/Tehran"},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			assertZone(t, list, tc.offset, false, tc.want)
+			assertZone(t, list, tt.offset, false, tt.want)
 
-			_, ok := list.NameByOffset(tc.offset, true)
+			_, ok := list.NameByOffset(tt.offset, true)
 			assert.False(t, ok, "dst state must not be registered")
 		})
 	}
@@ -265,14 +265,14 @@ func TestLocationList_NameByOffset_Collision(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			list := timezone.NewLocationList(tc.names)
+			list := timezone.NewLocationList(tt.names)
 
-			assertZone(t, list, 1*time.Hour, false, tc.want)
-			assertZone(t, list, 2*time.Hour, true, tc.want)
+			assertZone(t, list, 1*time.Hour, false, tt.want)
+			assertZone(t, list, 2*time.Hour, true, tt.want)
 		})
 	}
 }
@@ -305,14 +305,14 @@ func TestLocationList_NameByOffset_DuplicateIgnored(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			list := timezone.NewLocationList(tc.names)
+			list := timezone.NewLocationList(tt.names)
 
-			assertZone(t, list, 1*time.Hour, false, tc.want)
-			assertZone(t, list, 2*time.Hour, true, tc.want)
+			assertZone(t, list, 1*time.Hour, false, tt.want)
+			assertZone(t, list, 2*time.Hour, true, tt.want)
 		})
 	}
 }
@@ -338,11 +338,11 @@ func TestLocationList_NameByOffset_LocalExcluded(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			list := timezone.NewLocationList(tc.names)
+			list := timezone.NewLocationList(tt.names)
 
 			// на машине с UTC смещение совпадёт с UTC, поэтому проверяется
 			// не конкретное имя, иначе тест зависел бы от пояса машины

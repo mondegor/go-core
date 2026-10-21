@@ -84,11 +84,11 @@ func TestPermsProvider_IsRegistered(t *testing.T) {
 		{"empty name", "", false},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			assert.Equal(t, tc.want, provider.IsRegistered(tc.right))
+			assert.Equal(t, tt.want, provider.IsRegistered(tt.right))
 		})
 	}
 }

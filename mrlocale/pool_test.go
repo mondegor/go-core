@@ -77,14 +77,14 @@ func TestPool_Localizer(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := pool.Localizer(tc.langs...)
+			got := pool.Localizer(tt.langs...)
 
 			require.NotNil(t, got)
-			assert.Equal(t, tc.want, got.Language())
+			assert.Equal(t, tt.want, got.Language())
 		})
 	}
 }
@@ -150,14 +150,14 @@ func TestPool_LocalizerRegionalBundle(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := pool.Localizer(tc.langs...)
+			got := pool.Localizer(tt.langs...)
 
 			require.NotNil(t, got)
-			assert.Equal(t, tc.want, got.Language())
+			assert.Equal(t, tt.want, got.Language())
 		})
 	}
 }
@@ -205,17 +205,17 @@ func TestPool_LocalizerAcceptLanguage(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			langs, _, err := language.ParseAcceptLanguage(tc.header)
+			langs, _, err := language.ParseAcceptLanguage(tt.header)
 			require.NoError(t, err)
 
 			got := pool.Localizer(langs...)
 
 			require.NotNil(t, got)
-			assert.Equal(t, tc.want, got.Language())
+			assert.Equal(t, tt.want, got.Language())
 		})
 	}
 }
@@ -301,21 +301,21 @@ func TestPool_LocalizerByCode(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, ok := pool.LocalizerByCode(tc.code)
-			require.Equal(t, tc.wants, ok)
+			got, ok := pool.LocalizerByCode(tt.code)
+			require.Equal(t, tt.wants, ok)
 
-			if !tc.wants {
+			if !tt.wants {
 				assert.Nil(t, got)
 
 				return
 			}
 
 			require.NotNil(t, got)
-			assert.Equal(t, tc.want, got.Language())
+			assert.Equal(t, tt.want, got.Language())
 		})
 	}
 }
@@ -356,16 +356,16 @@ func TestPool_LocalizerByCode_RegionalLanguages(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, ok := pool.LocalizerByCode(tc.code)
-			assert.Equal(t, tc.wants, ok)
+			got, ok := pool.LocalizerByCode(tt.code)
+			assert.Equal(t, tt.wants, ok)
 
-			if tc.wants {
+			if tt.wants {
 				require.NotNil(t, got)
-				assert.Equal(t, tc.code, got.Language())
+				assert.Equal(t, tt.code, got.Language())
 			}
 		})
 	}

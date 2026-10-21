@@ -61,14 +61,14 @@ func TestNewLoggerAdapter_TimeZoneByDefault(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			got := logTimeValue(
 				t,
-				slog.WithJsonFormat(tc.jsonFormat),
-				slog.WithColorMode(tc.colorMode),
+				slog.WithJsonFormat(tt.jsonFormat),
+				slog.WithColorMode(tt.colorMode),
 				slog.WithTimeFormat("RFC3339"),
 			)
 

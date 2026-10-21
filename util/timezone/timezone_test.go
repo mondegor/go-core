@@ -58,19 +58,19 @@ func TestLocationList_LocationByName(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := list.LocationByName(tc.value)
+			got, err := list.LocationByName(tt.value)
 
-			if tc.wantErr {
+			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
 
-			assert.Equal(t, tc.want, got)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -181,11 +181,11 @@ func TestLocationList_Default(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			assert.Equal(t, tc.want, timezone.NewLocationList(tc.names).Default())
+			assert.Equal(t, tt.want, timezone.NewLocationList(tt.names).Default())
 		})
 	}
 }
@@ -236,11 +236,11 @@ func TestLocationList_TimeZones(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			assert.Equal(t, tc.want, timezone.NewLocationList(tc.names).TimeZones())
+			assert.Equal(t, tt.want, timezone.NewLocationList(tt.names).TimeZones())
 		})
 	}
 }

@@ -58,20 +58,20 @@ func TestNewBundle_DefaultLanguage(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			var opts []mrlocale.BundleOption
 
-			if tc.def != "" {
-				opts = append(opts, mrlocale.WithDefaultLanguage(tc.def))
+			if tt.def != "" {
+				opts = append(opts, mrlocale.WithDefaultLanguage(tt.def))
 			}
 
-			bundle, err := mrlocale.NewBundle(tc.languages, newStubProvider, opts...)
+			bundle, err := mrlocale.NewBundle(tt.languages, newStubProvider, opts...)
 			require.NoError(t, err)
 
-			assert.Equal(t, tc.want, mrlocale.NewPool(bundle).Localizer().Language())
+			assert.Equal(t, tt.want, mrlocale.NewPool(bundle).Localizer().Language())
 		})
 	}
 }
@@ -112,14 +112,14 @@ func TestNewBundle_EmptyLanguages(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			var opts []mrlocale.BundleOption
 
-			if tc.def != "" {
-				opts = append(opts, mrlocale.WithDefaultLanguage(tc.def))
+			if tt.def != "" {
+				opts = append(opts, mrlocale.WithDefaultLanguage(tt.def))
 			}
 
 			bundle, err := mrlocale.NewBundle(nil, newStubProvider, opts...)
@@ -127,8 +127,8 @@ func TestNewBundle_EmptyLanguages(t *testing.T) {
 
 			pool := mrlocale.NewPool(bundle)
 
-			assert.Equal(t, tc.want, pool.Localizer().Language())
-			assert.Equal(t, []string{tc.want}, pool.Languages())
+			assert.Equal(t, tt.want, pool.Localizer().Language())
+			assert.Equal(t, []string{tt.want}, pool.Languages())
 		})
 	}
 }
@@ -192,17 +192,17 @@ func TestNewBundle_Errors(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			var opts []mrlocale.BundleOption
 
-			if tc.def != "" {
-				opts = append(opts, mrlocale.WithDefaultLanguage(tc.def))
+			if tt.def != "" {
+				opts = append(opts, mrlocale.WithDefaultLanguage(tt.def))
 			}
 
-			bundle, err := mrlocale.NewBundle(tc.languages, newStubProvider, opts...)
+			bundle, err := mrlocale.NewBundle(tt.languages, newStubProvider, opts...)
 
 			require.Error(t, err)
 			assert.Nil(t, bundle)
@@ -260,17 +260,17 @@ func TestNewBundle_ProviderErrors(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			bundle, err := mrlocale.NewBundle(
 				[]string{"en"},
-				tc.provider,
-				tc.opts...,
+				tt.provider,
+				tt.opts...,
 			)
 
-			require.ErrorContains(t, err, tc.wantErr)
+			require.ErrorContains(t, err, tt.wantErr)
 			assert.Nil(t, bundle)
 		})
 	}

@@ -88,12 +88,12 @@ func TestRolesGroupSet_AccessTable(t *testing.T) {
 		{"empty right name denied", "administrators", "", false},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := getter.Rights(tc.group).Has(tc.right)
-			assert.Equal(t, tc.want, got)
+			got := getter.Rights(tt.group).Has(tt.right)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

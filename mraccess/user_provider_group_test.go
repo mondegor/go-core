@@ -87,21 +87,21 @@ func TestUserProviderGroup_UserByToken(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := group.UserByToken(t.Context(), tc.token)
+			got, err := group.UserByToken(t.Context(), tt.token)
 
-			if tc.wantErr {
-				require.ErrorContains(t, err, tc.errSubstr)
+			if tt.wantErr {
+				require.ErrorContains(t, err, tt.errSubstr)
 				assert.Nil(t, got)
 
 				return
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tc.wantUser, got)
+			assert.Equal(t, tt.wantUser, got)
 		})
 	}
 }

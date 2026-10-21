@@ -49,14 +49,14 @@ func TestNewUser_GroupRightsBinding(t *testing.T) {
 		{"unknown group fail-closed", "ghost-group", "public", false, "ghost-group"},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			user := mraccess.NewUser([16]byte{}, tc.group, "", "en", "UTC", getter)
+			user := mraccess.NewUser([16]byte{}, tt.group, "", "en", "UTC", getter)
 
-			assert.Equal(t, tc.wantGroup, user.Group())
-			assert.Equal(t, tc.wantHas, user.Has(tc.right))
+			assert.Equal(t, tt.wantGroup, user.Group())
+			assert.Equal(t, tt.wantHas, user.Has(tt.right))
 		})
 	}
 }

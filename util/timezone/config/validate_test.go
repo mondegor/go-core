@@ -55,13 +55,13 @@ func TestValidateTimeZones(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := config.ValidateTimeZones(tc.names)
+			err := config.ValidateTimeZones(tt.names)
 
-			if tc.wantErr {
+			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)

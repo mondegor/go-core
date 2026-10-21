@@ -167,8 +167,8 @@ func TestNewLoggerAdapter_MessageIsColorized(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			var buf bytes.Buffer
@@ -176,14 +176,14 @@ func TestNewLoggerAdapter_MessageIsColorized(t *testing.T) {
 			logger, err := slog.NewLoggerAdapter(
 				append(
 					[]slog.Option{slog.WithWriter(&buf), slog.WithColorMode(true)},
-					tc.opts...,
+					tt.opts...,
 				)...,
 			)
 			require.NoError(t, err)
 
 			logger.Info(t.Context(), "any message", stdlog.MessageKey, "attr value")
 
-			assert.Contains(t, buf.String(), tc.want, "log record: %q", buf.String())
+			assert.Contains(t, buf.String(), tt.want, "log record: %q", buf.String())
 		})
 	}
 }

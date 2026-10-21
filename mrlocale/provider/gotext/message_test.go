@@ -56,3 +56,12 @@ func TestMessageConverter(t *testing.T) {
 		})
 	}
 }
+
+// TestNewMessageFormatter - плейсхолдеры заменяются позиционными глаголами, повтор получает тот же номер.
+func TestNewMessageFormatter(t *testing.T) {
+	t.Parallel()
+
+	message, placeholders := gotext.NewMessageFormatter("{{", "}}").Format("{{Name}} is {{Age}}, {{Name}}")
+	assert.Equal(t, "%[1]s is %[2]s, %[1]s", message)
+	assert.Equal(t, []string{"%[1]s", "%[2]s"}, placeholders)
+}

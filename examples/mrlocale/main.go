@@ -29,18 +29,16 @@ func main() {
 
 	bundle, err := mrlocale.NewBundle(
 		languages,
+		func(languages []language.Tag) (mrlocale.MessageProvider, error) {
+			return gotext.NewProvider(
+				languages,
+				gotext.WithDomainCatalog(mrlocale.DefaultMessagesDomain, msgcat.NewCatalog()),
+				gotext.WithDomainCatalog(mrlocale.DefaultErrorsDomain, errcat.NewCatalog()),
+				gotext.WithDomainCatalog("fruitcat", fruitcat.NewCatalog()),
+			)
+		},
 		mrlocale.WithDefaultLanguage("ru-RU"),
 		mrlocale.WithFormatError(helper.ExtractMessageForLocalization),
-		mrlocale.WithMessageProvider(
-			func(languages []language.Tag) (mrlocale.MessageProvider, error) {
-				return gotext.NewProvider(
-					languages,
-					gotext.WithDomainCatalog(mrlocale.DefaultMessagesDomain, msgcat.NewCatalog()),
-					gotext.WithDomainCatalog(mrlocale.DefaultErrorsDomain, errcat.NewCatalog()),
-					gotext.WithDomainCatalog("fruitcat", fruitcat.NewCatalog()),
-				)
-			},
-		),
 	)
 	if err != nil {
 		panic(err)

@@ -17,9 +17,9 @@ type (
 // WithDomainCatalog - добавляет каталог переводов для указанного домена.
 // Параметры:
 //   - domain - имя домена (например: "messages" или "errors");
-//   - cat - каталог с переводами типа catalog.Catalog из golang.org/x/text/message/catalog;
+//   - cat - каталог с переводами типа catalog.Catalog из golang.org/x/text/message/catalog.
 //
-// Если cat равен nil, опция игнорируется.
+// Если cat равен nil, опция игнорируется. Повторный домен заменяет каталог, заданный ранее.
 func WithDomainCatalog(domain string, cat catalog.Catalog) Option {
 	return func(o *options) {
 		if cat == nil {

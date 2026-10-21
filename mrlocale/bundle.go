@@ -39,7 +39,8 @@ type (
 // NewBundle - создаёт Bundle для локализации сообщений.
 // Параметры:
 //   - languages - список поддерживаемых языков в формате BCP 47 (например: "en", "ru", "en-US", "en_US");
-//   - opts - дополнительные опции настройки (WithMessageProvider, WithDefaultLanguage и др.);
+//   - createProvider - фабрика провайдера локализации (обязательна), получает разобранный список языков бандла;
+//   - opts - дополнительные опции настройки (WithDefaultLanguage, WithFormatError и др.).
 //
 // Первый язык в списке становится языком по умолчанию, если не задан явно через WithDefaultLanguage.
 //
@@ -55,7 +56,11 @@ type (
 // кодом, который приложение реально использует. Чтобы расхождение записи не дошло
 // до приложения, список из конфигурации проверяется config.ValidateLanguages -
 // это единственное место, где неканоничная запись отвергается.
-func NewBundle(languages []string, opts ...BundleOption) (*Bundle, error) {
+func NewBundle(
+	languages []string,
+	createProvider func(languages []language.Tag) (MessageProvider, error),
+	opts ...BundleOption,
+) (*Bundle, error) {
 	o := bundleOptions{
 		messagesDomain: DefaultMessagesDomain,
 		errorsDomain:   DefaultErrorsDomain,
@@ -109,7 +114,7 @@ func NewBundle(languages []string, opts ...BundleOption) (*Bundle, error) {
 		defaultLanguage = tag
 	}
 
-	pr, err := o.createProvider(languageTags)
+	pr, err := createProvider(languageTags)
 	if err != nil {
 		return nil, fmt.Errorf("bundle create: %w", err)
 	}

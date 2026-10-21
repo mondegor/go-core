@@ -1,6 +1,18 @@
 # GoCore Changelog
 Все изменения библиотеки GoCore будут документироваться на этой странице.
 
+## 2026-10-20
+### Changed
+- `mrlocale.NewBundle()`: фабрика провайдера стала обязательным вторым параметром
+  `NewBundle(languages, createProvider, opts...)`; раньше она задавалась опцией и без неё
+  `NewBundle()` паниковал;
+- `gotext.Provider.Localize()`: для незарегистрированного домена или языка сообщение больше
+  не переводится по глобальному `message.DefaultCatalog`, а только форматируется;
+
+### Removed
+- Опция `mrlocale.WithMessageProvider()`, вместо `NewBundle(languages, WithMessageProvider(fn), ...)`
+  используйте `NewBundle(languages, fn, ...)`;
+
 ## 2026-10-19
 ### Changed
 - В текстах ошибок и логов значения из конфигов и внешнего ввода выводятся через `%q` (в двойных

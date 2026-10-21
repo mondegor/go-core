@@ -1,15 +1,10 @@
 package mrlocale
 
-import (
-	"golang.org/x/text/language"
-)
-
 type (
 	// BundleOption - функция-опция для настройки Bundle.
 	BundleOption func(o *bundleOptions)
 
 	bundleOptions struct {
-		createProvider  func(languages []language.Tag) (MessageProvider, error)
 		formatMessage   func(msg string, args []any) (newMsg string, newArgs []any)
 		formatError     func(err error) (msg string, args []any)
 		messagesDomain  string
@@ -18,24 +13,16 @@ type (
 	}
 )
 
-// WithMessageProvider - задаёт фабрику для создания провайдера локализации сообщений.
-// Функция createFunc получает список языков и должна вернуть реализацию MessageProvider.
-func WithMessageProvider(createFunc func(languages []language.Tag) (MessageProvider, error)) BundleOption {
-	return func(o *bundleOptions) {
-		o.createProvider = createFunc
-	}
-}
-
-// WithFormatMessage - задаёт функцию для предварительной обработки сообщения и аргументов
-// перед локализацией. Позволяет трансформировать сообщение и аргументы до передачи провайдеру.
+// WithFormatMessage - задаёт функцию предварительной обработки сообщения и аргументов
+// перед передачей провайдеру, в том числе сообщений ошибок (по умолчанию - без изменений).
 func WithFormatMessage(fn func(msg string, args []any) (newMsg string, newArgs []any)) BundleOption {
 	return func(o *bundleOptions) {
 		o.formatMessage = fn
 	}
 }
 
-// WithFormatError - задаёт функцию для извлечения сообщения и аргументов из ошибки.
-// Используется при локализации ошибок через TranslateError.
+// WithFormatError - задаёт функцию извлечения сообщения и аргументов из ошибки для
+// Localizer.TranslateError (по умолчанию - err.Error() без аргументов).
 func WithFormatError(fn func(err error) (msg string, args []any)) BundleOption {
 	return func(o *bundleOptions) {
 		o.formatError = fn

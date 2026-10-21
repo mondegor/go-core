@@ -27,7 +27,8 @@ func (l *Localizer) Translate(msg string, args ...any) string {
 }
 
 // TranslateError - локализует сообщение об ошибке из домена ошибок (errors).
-// Извлекает текст и аргументы из ошибки через formatError, затем локализует результат.
+// Текст и аргументы извлекаются из ошибки через formatError (см. WithFormatError),
+// затем обрабатываются как обычное сообщение (см. WithFormatMessage).
 func (l *Localizer) TranslateError(err error) string {
 	msg, args := l.bundle.formatError(err)
 

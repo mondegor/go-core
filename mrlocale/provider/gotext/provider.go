@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
+	"golang.org/x/text/message/catalog"
 )
 
 type (
@@ -21,10 +22,10 @@ type (
 
 // NewProvider - создаёт Provider локализации сообщений.
 // Параметры:
-//   - languages - список языков для которых будет настроена локализация;
-//   - opts - опции для добавления каталогов переводов через WithDomainCatalog;
+//   - languages - список языков, для которых будет настроена локализация (обязателен);
+//   - opts - опции для добавления каталогов переводов через WithDomainCatalog.
 //
-// Первый язык в списке становится языком по умолчанию.
+// Первый язык в списке становится языком по умолчанию (см. Localize).
 func NewProvider(
 	languages []language.Tag,
 	opts ...Option,
@@ -36,11 +37,13 @@ func NewProvider(
 	}
 
 	if len(languages) == 0 {
-		return nil, errors.New("gotext provider:languages is required")
+		return nil, errors.New("gotext provider: languages is required")
 	}
 
 	p := &Provider{
-		defaultPrinter: message.NewPrinter(languages[0]),
+		// пустой каталог вместо глобального message.DefaultCatalog:
+		// сообщение вне зарегистрированных доменов и языков не переводится
+		defaultPrinter: message.NewPrinter(languages[0], message.Catalog(catalog.NewBuilder())),
 	}
 
 	if len(o.domains) == 0 {
@@ -69,7 +72,8 @@ func (p *Provider) Domains() []string {
 }
 
 // Localize - возвращает локализованное сообщение с подставленными аргументами.
-// Если для указанной пары domain/lang не найден каталог, используется язык по умолчанию.
+// Если домен или язык не зарегистрированы, сообщение только форматируется
+// (без перевода) по правилам языка по умолчанию.
 func (p *Provider) Localize(domain string, lang language.Tag, msg string, args []any) string {
 	printer := p.defaultPrinter
 

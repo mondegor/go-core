@@ -1,6 +1,7 @@
 package mrlocale_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -61,19 +62,13 @@ func TestNewBundle_DefaultLanguage(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			opts := []mrlocale.BundleOption{
-				mrlocale.WithMessageProvider(
-					func(_ []language.Tag) (mrlocale.MessageProvider, error) {
-						return stubProvider{}, nil
-					},
-				),
-			}
+			var opts []mrlocale.BundleOption
 
 			if tc.def != "" {
 				opts = append(opts, mrlocale.WithDefaultLanguage(tc.def))
 			}
 
-			bundle, err := mrlocale.NewBundle(tc.languages, opts...)
+			bundle, err := mrlocale.NewBundle(tc.languages, newStubProvider, opts...)
 			require.NoError(t, err)
 
 			assert.Equal(t, tc.want, mrlocale.NewPool(bundle).Localizer().Language())
@@ -121,19 +116,13 @@ func TestNewBundle_EmptyLanguages(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			opts := []mrlocale.BundleOption{
-				mrlocale.WithMessageProvider(
-					func(_ []language.Tag) (mrlocale.MessageProvider, error) {
-						return stubProvider{}, nil
-					},
-				),
-			}
+			var opts []mrlocale.BundleOption
 
 			if tc.def != "" {
 				opts = append(opts, mrlocale.WithDefaultLanguage(tc.def))
 			}
 
-			bundle, err := mrlocale.NewBundle(nil, opts...)
+			bundle, err := mrlocale.NewBundle(nil, newStubProvider, opts...)
 			require.NoError(t, err)
 
 			pool := mrlocale.NewPool(bundle)
@@ -207,19 +196,13 @@ func TestNewBundle_Errors(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			opts := []mrlocale.BundleOption{
-				mrlocale.WithMessageProvider(
-					func(_ []language.Tag) (mrlocale.MessageProvider, error) {
-						return stubProvider{}, nil
-					},
-				),
-			}
+			var opts []mrlocale.BundleOption
 
 			if tc.def != "" {
 				opts = append(opts, mrlocale.WithDefaultLanguage(tc.def))
 			}
 
-			bundle, err := mrlocale.NewBundle(tc.languages, opts...)
+			bundle, err := mrlocale.NewBundle(tc.languages, newStubProvider, opts...)
 
 			require.Error(t, err)
 			assert.Nil(t, bundle)
@@ -235,14 +218,95 @@ func TestNewBundle_UndefinedLanguageIsSupported(t *testing.T) {
 
 	bundle, err := mrlocale.NewBundle(
 		[]string{"ru-RU", "und"},
+		newStubProvider,
 		mrlocale.WithDefaultLanguage("und"),
-		mrlocale.WithMessageProvider(
-			func(_ []language.Tag) (mrlocale.MessageProvider, error) {
-				return stubProvider{}, nil
-			},
-		),
 	)
 	require.NoError(t, err)
 
 	assert.Equal(t, "und", mrlocale.NewPool(bundle).Localizer().Language())
+}
+
+// TestNewBundle_ProviderErrors - проверяет отказы, связанные с провайдером.
+func TestNewBundle_ProviderErrors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		provider func([]language.Tag) (mrlocale.MessageProvider, error)
+		opts     []mrlocale.BundleOption
+		wantErr  string
+	}{
+		{
+			name: "provider has not messages domain",
+			provider: func(_ []language.Tag) (mrlocale.MessageProvider, error) {
+				return echoProvider{domains: []string{mrlocale.DefaultErrorsDomain}}, nil
+			},
+			wantErr: `messages domain "messages"`,
+		},
+		{
+			name: "provider has not errors domain",
+			provider: func(_ []language.Tag) (mrlocale.MessageProvider, error) {
+				return echoProvider{domains: []string{mrlocale.DefaultMessagesDomain}}, nil
+			},
+			wantErr: `errors domain "errors"`,
+		},
+		{
+			name: "provider has not custom messages domain",
+			provider: func(_ []language.Tag) (mrlocale.MessageProvider, error) {
+				return stubProvider{}, nil
+			},
+			opts:    []mrlocale.BundleOption{mrlocale.WithMessagesDomain("custom")},
+			wantErr: `messages domain "custom"`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			bundle, err := mrlocale.NewBundle(
+				[]string{"en"},
+				tc.provider,
+				tc.opts...,
+			)
+
+			require.ErrorContains(t, err, tc.wantErr)
+			assert.Nil(t, bundle)
+		})
+	}
+}
+
+// TestNewBundle_ProviderFactoryFails - ошибка фабрики провайдера возвращается обёрнутой.
+func TestNewBundle_ProviderFactoryFails(t *testing.T) {
+	t.Parallel()
+
+	errProvider := errors.New("provider failed")
+
+	bundle, err := mrlocale.NewBundle(
+		[]string{"en"},
+		func(_ []language.Tag) (mrlocale.MessageProvider, error) {
+			return nil, errProvider
+		},
+	)
+
+	require.ErrorIs(t, err, errProvider)
+	assert.Nil(t, bundle)
+}
+
+// TestNewBundle_ProviderGetsLanguages - фабрика провайдера получает разобранные языки бандла.
+func TestNewBundle_ProviderGetsLanguages(t *testing.T) {
+	t.Parallel()
+
+	var got []language.Tag
+
+	_, err := mrlocale.NewBundle(
+		[]string{"ru_RU", "en"},
+		func(languages []language.Tag) (mrlocale.MessageProvider, error) {
+			got = languages
+
+			return stubProvider{}, nil
+		},
+	)
+	require.NoError(t, err)
+	assert.Equal(t, []language.Tag{language.MustParse("ru-RU"), language.English}, got)
 }

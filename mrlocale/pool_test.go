@@ -24,6 +24,11 @@ func (p stubProvider) Localize(_ string, _ language.Tag, msg string, _ []any) st
 	return msg
 }
 
+// newStubProvider - фабрика stubProvider для NewBundle.
+func newStubProvider(_ []language.Tag) (mrlocale.MessageProvider, error) {
+	return stubProvider{}, nil
+}
+
 // TestPool_Localizer - проверяет подбор локализатора по списку языков.
 // Язык по умолчанию задан явно и не является первым в списке, поэтому промах
 // матчера отличим от подбора первого языка.
@@ -95,12 +100,8 @@ func TestPool_LocalizerRegionalBundle(t *testing.T) {
 
 	bundle, err := mrlocale.NewBundle(
 		[]string{"ru-RU", "en-US"},
+		newStubProvider,
 		mrlocale.WithDefaultLanguage("en-US"),
-		mrlocale.WithMessageProvider(
-			func(_ []language.Tag) (mrlocale.MessageProvider, error) {
-				return stubProvider{}, nil
-			},
-		),
 	)
 	require.NoError(t, err)
 
@@ -169,12 +170,8 @@ func TestPool_LocalizerAcceptLanguage(t *testing.T) {
 
 	bundle, err := mrlocale.NewBundle(
 		[]string{"ru-RU", "en-US"},
+		newStubProvider,
 		mrlocale.WithDefaultLanguage("en-US"),
-		mrlocale.WithMessageProvider(
-			func(_ []language.Tag) (mrlocale.MessageProvider, error) {
-				return stubProvider{}, nil
-			},
-		),
 	)
 	require.NoError(t, err)
 
@@ -239,12 +236,8 @@ func testPool(t *testing.T) *mrlocale.Pool {
 
 	bundle, err := mrlocale.NewBundle(
 		[]string{"fr", "en", "de"},
+		newStubProvider,
 		mrlocale.WithDefaultLanguage("de"),
-		mrlocale.WithMessageProvider(
-			func(_ []language.Tag) (mrlocale.MessageProvider, error) {
-				return stubProvider{}, nil
-			},
-		),
 	)
 	require.NoError(t, err)
 
@@ -258,11 +251,7 @@ func testPoolNonCanonical(t *testing.T) *mrlocale.Pool {
 
 	bundle, err := mrlocale.NewBundle(
 		[]string{"en_US", "RU-ru"},
-		mrlocale.WithMessageProvider(
-			func(_ []language.Tag) (mrlocale.MessageProvider, error) {
-				return stubProvider{}, nil
-			},
-		),
+		newStubProvider,
 	)
 	require.NoError(t, err)
 
@@ -339,11 +328,7 @@ func TestPool_LocalizerByCode_RegionalLanguages(t *testing.T) {
 
 	bundle, err := mrlocale.NewBundle(
 		[]string{"ru-RU", "en-US"},
-		mrlocale.WithMessageProvider(
-			func(_ []language.Tag) (mrlocale.MessageProvider, error) {
-				return stubProvider{}, nil
-			},
-		),
+		newStubProvider,
 	)
 	require.NoError(t, err)
 
